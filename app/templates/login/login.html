@@ -1,0 +1,98 @@
+<!-- <!DOCTYPE html> -->
+<html lang="zh-cn">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>蜂巢</title>
+
+    <!-- Bootstrap -->
+    <link href="http://lib.sinaapp.com/js/bootstrap/latest/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="http://cdn.bootcss.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="http://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <script src="http://lib.sinaapp.com/js/jquery/3.1.0/jquery-3.1.0.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="http://lib.sinaapp.com/js/bootstrap/latest/js/bootstrap.min.js"></script>
+    <link href="{{url_for('static', filename='css/login.css')}}" rel="stylesheet">
+    <style type="text/css">
+      body{
+      	text-align: center;
+      	background: #f7fafc;
+      	overflow: hidden;
+      	}
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid" style="position: absolute; width: 100%; top:25%">
+      <form class="form-signin" role="form">
+        <h2 class="form-signin-heading">蜂巢</h2>
+        <div id="username_form" class="form-group">
+          <input id="username" name="username" type="text" class="form-control" placeholder="username" required autofocus>
+        </div>
+        <div id="password_form" class="form-group">
+          <input id="password" name="password" type="password" class="form-control" placeholder="Password" required>
+        </div>
+        <label>
+            申请账号,请联系站长 195432020@qq.com
+        </label>
+
+        <button id="login" type="button" class="btn btn-lg btn-primary btn-block">登录</button>
+      </form>
+    </div>
+    <canvas id="Mycanvas"></canvas>
+    <script src="{{url_for('static', filename='js/background.js')}}"></script>
+    <script>
+
+    $("#login").click(function(event){
+     var username = $("#username").val().trim();
+     var password = $("#password").val();
+     if (username.length == 0){
+       $("#username_form").attr("class","form-group has-error");
+       return;
+     }
+     if (password.length == 0){
+       $("#password_form").attr("class","form-group has-error");
+       return;
+     }
+     $.post("/login",
+        {
+          username:username,
+          password:password
+        },
+        function(data, status){
+          if (data["result"]==1){
+            window.location.href="/index";
+          }
+          else{
+            alert("用户名密码错误");
+          }
+        });
+  });
+        $("#username").change(function(event){
+        var username = $("#username").val().trim();
+        if (username.length != 0){
+          $("#username_form").attr("class","form-group");
+          return;
+        };
+      })
+
+      $("#password").change(function(event){
+        var password = $("#password").val();
+        if (password.length != 0){
+          $("#password_form").attr("class","form-group");
+          return;
+        };
+      })
+
+      $("form").keypress(function(e){
+        if(e.which == 13){
+            jQuery('#login').click();
+        }
+      })
+    </script>
+</html>

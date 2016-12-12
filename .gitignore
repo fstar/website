@@ -1,0 +1,9 @@
+*.pyc
+.idea
+*.log
+*.swp
+app.py
+.DS_Store
+config.ini
+.vscode
+*.json
