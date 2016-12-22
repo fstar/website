@@ -23,7 +23,58 @@
     <script src="{{url_for('static', filename='js/bootstrap.min.js')}}"></script>
     <script src="{{url_for('static', filename='js/blooming-menu.min.js')}}"></script>
     <!-- <link href="{{url_for('static', filename='css/login.css')}}" rel="stylesheet"> -->
+    <style type="text/css">
 
+    .blooming-menu__item-btn {
+        transition:
+          box-shadow .28s cubic-bezier(.4,0,.2,1),
+          opacity .28s cubic-bezier(.4,0,.2,1)
+        ;
+        background-size: 50%;
+        background-position: center center;
+        background-repeat: no-repeat;
+        opacity: 0.8;
+      }
+      /*.blooming-menu__item:nth-of-type(1) .blooming-menu__item-btn {
+        background-image: url(/static/img/language.svg);
+      }
+
+      .blooming-menu__item:nth-of-type(2) .blooming-menu__item-btn {
+        background-image: url(/static/img/accessibility.svg);
+      }
+
+      .blooming-menu__item:nth-of-type(3) .blooming-menu__item-btn {
+        background-image: url(/static/img/favorite.svg);
+      }
+
+      .blooming-menu__item:nth-of-type(4) .blooming-menu__item-btn {
+        background-image: url(/static/img/find-in-page.svg);
+        background-size: 40%;
+      }
+
+      .blooming-menu__item:nth-of-type(5) .blooming-menu__item-btn {
+        background-image: url(/static/img/get-app.svg);
+        background-size: 35%;
+      }
+
+      .blooming-menu__item:nth-of-type(6) .blooming-menu__item-btn {
+        background-image: url(/static/img/grade.svg);
+      }
+
+      .blooming-menu__item:nth-of-type(7) .blooming-menu__item-btn {
+        background-image: url(/static/img/home.svg);
+      }
+
+      .blooming-menu__item:nth-of-type(8) .blooming-menu__item-btn {
+        background-image: url(/static/img/lock.svg);
+        background-size: 35%;
+      }*/
+
+      /*.blooming-menu__item-btn:hover {
+        box-shadow: 0 8px 17px 0 rgba(0,0,0,.2);
+        opacity: 1;
+      }*/
+    </style>
     <style type="text/css">
       body{
       	text-align: center;
@@ -42,23 +93,24 @@
     <script src="{{url_for('static', filename='js/background.js')}}"></script>
     <script type="text/javascript">
       var radius = (window.innerWidth * window.innerHeight) * 20/336279 + 85;
-      console.log("asdasdd",radius);
       var datas = [];
+
+
       $.ajax({
           url:"/index/get_module",
           type:"GET",
           async:false,
           success: function(data){
-                    console.log(data);
-                    datas = data.data;
+                    datas=datas.concat(data.data);
                 }
         });
+        console.log(datas);
         var data_num = datas.length;
         // var data_num = 9;
         var menu = new BloomingMenu({
           itemsNum: data_num,
-          startAngle: -90,
-		      endAngle: 270-360/data_num,
+          startAngle: 90,
+		      endAngle: 450-360/data_num,
 		      radius: radius,
           itemWidth:300,
           mainContent:" ",
@@ -66,65 +118,21 @@
         })
         menu.render()
         menu.props.elements.items.forEach(function(item, index){
-          console.log(item);
           item.addEventListener('click', function(){
-            console.log("click",datas[index]);
             window.location.href = datas[index].url;
+          });
+          item.addEventListener("mouseover", function(){
+            console.log(datas[index].name);
           })
+          console.log($(".blooming-menu__item:nth-of-type("+(index+1)+ ") .blooming-menu__item-btn"));
+          $(".blooming-menu__item:nth-of-type("+(index+1)+ ") .blooming-menu__item-btn").css("background-image", "url(/static/img/"+datas[index].icon_url+")");
         })
     </script>
     <style type="text/css">
     .blooming-menu__main{
       position:relative;
+      background-image: url(/static/img/cross79.svg);
+      background-size: 100%;
     }
-    .blooming-menu__item-btn {
-	      transition:
-	        box-shadow .28s cubic-bezier(.4,0,.2,1),
-	        opacity .28s cubic-bezier(.4,0,.2,1)
-	      ;
-	      background-size: 50%;
-	      background-position: center center;
-	      background-repeat: no-repeat;
-	      opacity: 0.8;
-	    }
-      .blooming-menu__item:nth-of-type(1) .blooming-menu__item-btn {
-	      background-image: url(/static/img/language.svg);
-	    }
-
-	    .blooming-menu__item:nth-of-type(2) .blooming-menu__item-btn {
-	      background-image: url(/static/img/accessibility.svg);
-	    }
-
-	    .blooming-menu__item:nth-of-type(3) .blooming-menu__item-btn {
-	      background-image: url(/static/img/favorite.svg);
-	    }
-
-	    .blooming-menu__item:nth-of-type(4) .blooming-menu__item-btn {
-	      background-image: url(/static/img/find-in-page.svg);
-	      background-size: 40%;
-	    }
-
-	    .blooming-menu__item:nth-of-type(5) .blooming-menu__item-btn {
-	      background-image: url(/static/img/get-app.svg);
-	      background-size: 35%;
-	    }
-
-	    .blooming-menu__item:nth-of-type(6) .blooming-menu__item-btn {
-	      background-image: url(/static/img/grade.svg);
-	    }
-
-	    .blooming-menu__item:nth-of-type(7) .blooming-menu__item-btn {
-	      background-image: url(/static/img/home.svg);
-	    }
-
-	    .blooming-menu__item:nth-of-type(8) .blooming-menu__item-btn {
-	      background-image: url(/static/img/lock.svg);
-	      background-size: 35%;
-	    }
-
-	    .blooming-menu__item-btn:hover {
-	      box-shadow: 0 8px 17px 0 rgba(0,0,0,.2);
-	      opacity: 1;
-	    }
     </style>
 </html>

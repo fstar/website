@@ -91,6 +91,7 @@ function draw () {
 function draw_background_image(){
   // console.log(img.width, img.height);
   context.drawImage(img, 0, 0, img.width, img.height);
+  // context.drawImage(img_404, 0,0);
 }
 
 function draw_background(){
@@ -132,9 +133,6 @@ function draw_background(){
   }
 }
 
-function create_404(){
-  circle_404.push(new Circle(x, y, r, moveX, moveY))
-}
 
 //调用执行
 window.onload = function () {

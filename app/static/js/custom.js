@@ -64,9 +64,10 @@ $(document).ready(function(){
 /* Widget close */
 
 $('.wclose').click(function(e){
+  console.log('bbbbbbbbb');
   e.preventDefault();
   var $wbox = $(this).parent().parent().parent();
-  $wbox.hide(100);
+  $wbox.css(100);
 });
 
 /* Widget minimize */

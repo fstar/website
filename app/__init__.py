@@ -26,7 +26,6 @@ def create_app(database, config="app.config.ConfigObject"):
     app.logger.handlers = create_logger_handler("spider_api", is_stream_handler=True)
 
     add_request_handler(application=app, database=database)
-    app.jinja_env.cache_size = 0
 
 
     return app
@@ -41,12 +40,14 @@ def initialize_app(application, config, profile=False):
     # 注册蓝图
     from app.views.login.login_view import login_view
     from app.views.index.index_view import index_view
+    from app.views.admin.admin_view import admin_view
     # from app.views.input_data.input_api import input_data_api_view
     # from app.views.data.data_view import data_view
     # from app.views.input_mongodb.input_api import input_mongodb_api_view
 
     application.register_blueprint(login_view)
     application.register_blueprint(index_view)
+    application.register_blueprint(admin_view)
     # application.register_blueprint(input_data_api_view)
     # application.register_blueprint(data_view)
     # application.register_blueprint(input_mongodb_api_view)
@@ -55,8 +56,10 @@ def initialize_app(application, config, profile=False):
     # restful api 不跨域保护
     csrf = CsrfProtect()
     csrf.init_app(application)
+
     # csrf.exempt(input_data_api_view)
     csrf.exempt(login_view)
+    csrf.exempt(admin_view)
     # csrf.exempt(data_view)
     # csrf.exempt(input_mongodb_api_view)
 
@@ -98,3 +101,4 @@ def add_request_handler(application, database):
     def page_not_found(error):
         return render_template("404.html"), 404
 app = create_app(db)
+app.jinja_env = app.jinja_env.overlay(cache_size=0)

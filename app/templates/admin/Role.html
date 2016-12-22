@@ -41,35 +41,34 @@
                 </div>
                 <div class="widget-content">
                   <div class="padd">
-                    <h6>用户信息</h6>
+                    <h6>角色信息</h6>
                     <hr/>
                             <!-- Form starts.  -->
                             <form class="form-horizontal" role="form">
                                 <div class="form-group">
-                                  <label class="col-lg-4 control-label">用户名</label>
+                                  <label class="col-lg-4 control-label">角色名</label>
                                   <div class="col-lg-8">
-                                    <input type="text" class="form-control"  name="username" placeholder="Input Box" id="username" required><span class='glyphicon glyphicon-remove' style="color:red;display:none;"></span>
+                                    <input type="text" class="form-control" name="rolename" placeholder="Input Box" id="rolename" required><span class='glyphicon glyphicon-remove' style="color:red;display:none;"></span>
                                   </div>
                                 </div>
 
                                 <div class="form-group">
-                                  <label class="col-lg-4 control-label">密码</label>
+                                  <label class="col-lg-4 control-label">模块</label>
                                   <div class="col-lg-8">
-                                    <input type="text" class="form-control" name="password" placeholder="Password Box"   autocomplete='new-password' required><span class='glyphicon glyphicon-remove' style="color:red;display:none;"></span>
+                                    <label class="checkbox-inline">
+                                      <input type="checkbox" id="inlineCheckbox1" value="option1"> 1
+                                    </label>
+                                    <label class="checkbox-inline">
+                                      <input type="checkbox" id="inlineCheckbox2" value="option2"> 2
+                                    </label>
+                                    <label class="checkbox-inline">
+                                      <input type="checkbox" id="inlineCheckbox3" value="option3"> 3
+                                    </label>
                                   </div>
                                 </div>
 
 
-                                <div class="form-group">
-                                  <label class="col-lg-4 control-label">角色</label>
-                                  <div class="col-lg-8">
-                                    <select class="form-control" id="role_list" name="role_id">
-
-                                    </select>
-                                  </div>
-                                </div>
-
-                                <input type='hidden' name='uid' value='-1'>
+                                <input type='hidden' name='role_id' value='-1'>
 
 
                                 <hr />
@@ -102,11 +101,8 @@
                   <thead>
                     <tr>
                       <th>#</th>
-                      <th>用户名</th>
-                      <th>密码</th>
-                      <th>Token(自动生成)</th>
                       <th>角色</th>
-                      <th>账户状态</th>
+                      <th>角色状态</th>
                       <th>操作</th>
                     </tr>
                   </thead>
@@ -117,11 +113,9 @@
                 </table>
 
                 <div class="widget-foot">
-                  <ul class="pagination pull-left">
-                    <span onclick="edit_user(-1)" class="glyphicon glyphicon-plus"></span>
-                  </ul>
-                  <ul class="pagination pull-right" id="user_pagination">
-                  </ul>
+                    <!-- <ul class="pagination pull-right" id="user_pagination"> -->
+                       <span onclick="edit_user(-1)" style="float:right" class="glyphicon glyphicon-plus"></span>
+                    <!-- </ul> -->
 
                   <div class="clearfix"></div>
 
@@ -141,6 +135,6 @@
 
 <div id="show_detail" style="display:none;position:fixed;z-index:9999999;">
 </div>
-<script src="{{url_for('static', filename='js/admin/user.js')}}"></script>
+<script src="{{url_for('static', filename='js/admin/role.js')}}"></script>
 
 {% endblock head %}

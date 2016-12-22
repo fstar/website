@@ -28,6 +28,9 @@
     </style>
   </head>
   <body>
-    <canvas id="Mycanvas" style="z-index:0"></canvas>
+    <div class="container" id="main">
+        <object data="/static/img/404.svg" codetype="image/svg-xml"></object>
+    </div>
+    <canvas id="Mycanvas" style="position: fixed;left: 0px;top:0px;z-index: -1;"></canvas>
     <script src="{{url_for('static', filename='js/404.js')}}"></script>
 </html>

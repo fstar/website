@@ -1,8 +1,8 @@
 # -*- coding:utf-8 -*-
-from flask import request, session, redirect
+from flask import request, session, redirect, render_template
 from functools import wraps
 from app.views.common.utils import failed_resp
-from app.models import db, User
+from app.models import db, User, Module, Role_Module
 
 
 def cls_decorate(my_decorator, exempt=None):
@@ -34,8 +34,8 @@ def permission_check(func):
         if not token:   # 如果头部信息里没有token,返回401
             return failed_resp("token missing", 401)
         user_query = spider_user.query.filter_by(token=token, status=1).first()
-        if not user_query: # 如果token在数据库里不存在,返回401
-            return failed_resp(u"token 错误", 401)
+        if not user_query: # 如果token在数据库里不存在,返回403
+            return failed_resp(u"token 错误", 403)
         # 如果token存在,则返回uid
         uid = user_query.uid
         kwargs.update(uid=uid)
@@ -43,7 +43,7 @@ def permission_check(func):
     return _decorate
 
 
-def session_check(redirect_for='/'):
+def session_check(current_module=None, redirect_for='/'):
     """只验证session"""
 
     def decorated(f):
@@ -51,6 +51,15 @@ def session_check(redirect_for='/'):
         def decorated_fn(*args, **kwargs):
             if not session or "uid" not in session or "name" not in session:
                 return redirect(redirect_for)
+            if current_module:
+                role_module_query = Module.query.join(Role_Module).\
+                                    filter(Module.url==current_module,\
+                                    Role_Module.role_id==session["role_id"],
+                                    Module.status==1,
+                                    Role_Module.status==1).first()
+                if not role_module_query:
+                    return render_template("404.html"), 403
+
             return f(*args, **kwargs)
         return decorated_fn
     return decorated
