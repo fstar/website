@@ -96,7 +96,7 @@ def add_request_handler(application, database):
             form_data.update(request.args)
             application.logger.error("%s %s -->cost:%s ms, form_data: %s" % (url, method, use_time, str(form_data)))
             application.logger.error(exception, exc_info=1)
-            sys.exc_clear()
+
     @application.errorhandler(404)
     def page_not_found(error):
         return render_template("404.html"), 404

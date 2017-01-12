@@ -2,7 +2,7 @@
 from flask import request, session, redirect, render_template
 from functools import wraps
 from app.views.common.utils import failed_resp
-from app.models import db, User, Module, Role_Module
+from app.models import db, User, Module, Role_Module, Role
 
 
 def cls_decorate(my_decorator, exempt=None):
@@ -49,8 +49,17 @@ def session_check(current_module=None, redirect_for='/'):
     def decorated(f):
         @wraps(f)
         def decorated_fn(*args, **kwargs):
-            if not session or "uid" not in session or "name" not in session:
+            if not session or "uid" not in session:
                 return redirect(redirect_for)
+
+            if session["uid"] == 1:
+                return f(*args, **kwargs)
+            user_query = User.query.join(Role).filter(User.uid==session["uid"]).\
+                            with_entities(User.name.label("user_name"), Role.id.label("role_id"),
+                            Role.name.label("role_name")).first()
+            session["name"] = user_query.user_name
+            session["role_id"] = user_query.role_id
+            session["role_name"] = user_query.role_name
             if current_module:
                 role_module_query = Module.query.join(Role_Module).\
                                     filter(Module.url==current_module,\

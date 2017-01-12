@@ -24,11 +24,12 @@
         <ul class="nav navbar-nav pull-right">
           <li class="dropdown pull-right">
             <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-              <i class="icon-user"></i> {{ session["role"] }} <b class="caret"></b>
+              <i class="icon-user"></i> {{ session["role_name"] }} <b class="caret"></b>
             </a>
 
             <!-- Dropdown menu -->
             <ul class="dropdown-menu">
+              <li><a href="/index"><i class="icon-off"></i> Index</a></li>
               <li><a href="/logout"><i class="icon-off"></i> 退出</a></li>
             </ul>
           </li>

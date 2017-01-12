@@ -48,14 +48,14 @@
                                 <div class="form-group">
                                   <label class="col-lg-4 control-label">用户名</label>
                                   <div class="col-lg-8">
-                                    <input type="text" class="form-control"  name="username" placeholder="Input Box" id="username" required><span class='glyphicon glyphicon-remove' style="color:red;display:none;"></span>
+                                    <input type="text" onchange="input_on_change(this)" class="form-control"  name="username" placeholder="请输入用户名" id="username" required><span class='glyphicon glyphicon-remove' style="color:red;display:none;"></span>
                                   </div>
                                 </div>
 
                                 <div class="form-group">
                                   <label class="col-lg-4 control-label">密码</label>
                                   <div class="col-lg-8">
-                                    <input type="text" class="form-control" name="password" placeholder="Password Box"   autocomplete='new-password' required><span class='glyphicon glyphicon-remove' style="color:red;display:none;"></span>
+                                    <input type="text" onchange="input_on_change(this)" class="form-control" name="password" placeholder="请输入密码"   autocomplete='new-password' required><span class='glyphicon glyphicon-remove' style="color:red;display:none;"></span>
                                   </div>
                                 </div>
 
@@ -102,12 +102,12 @@
                   <thead>
                     <tr>
                       <th>#</th>
-                      <th>用户名</th>
-                      <th>密码</th>
+                      <th style="min-width:100px">用户名</th>
+                      <th style="min-width:100px">密码</th>
                       <th>Token(自动生成)</th>
-                      <th>角色</th>
-                      <th>账户状态</th>
-                      <th>操作</th>
+                      <th style="min-width:100px">角色</th>
+                      <th style="min-width:100px">账户状态</th>
+                      <th style="min-width:100px">操作</th>
                     </tr>
                   </thead>
                   <tbody>

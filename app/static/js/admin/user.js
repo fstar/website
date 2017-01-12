@@ -32,6 +32,18 @@ String.prototype.format = function(args) {
     return result;
 }
 
+String.prototype.Trim = function(){
+  return this.replace(/(^\s*)|(\s*$)/g, "");
+}
+
+String.prototype.LTrim = function(){
+  return this.replace(/(^\s*)/g, "");
+}
+
+String.prototype.RTrim = function(){
+  return this.replace(/(\s*$)/g, "");
+}
+
 function hidden_form(){
   // 隐藏表单
   var $wbox = $("#userform");
@@ -157,14 +169,14 @@ function add_edit_api(button){
    $span_dom.text("");
 
 
-   var username = $("input[name='username']").val();
-   var password = $("input[name='password']").val();
-   var role_id = $("#role_list").val();
-   var uid = $("input[name='uid']").val();
+   var username = $("input[name='username']").val().Trim();
+   var password = $("input[name='password']").val().Trim();
+   var role_id = $("#role_list").val().Trim();
+   var uid = $("input[name='uid']").val().Trim();
    console.log(username, password, role_id, uid);
 
    if (username.length == 0){
-     var $span = $("input[name=username]").next("span");
+     var $span = $("input[name='username']").next("span");
      $span.css("display", "block");
      $span.text("请输入用户名!");
      $(button).removeAttr("disabled");
@@ -172,7 +184,7 @@ function add_edit_api(button){
    }
 
    if (password.length == 0){
-     var $span = $("input[name=password]").next("span");
+     var $span = $("input[name='password']").next("span");
      $span.css("display", "block");
      $span.text("请输入密码!");
      $(button).removeAttr("disabled");
@@ -196,9 +208,10 @@ function add_edit_api(button){
              alert(data.info);
              get_user(1);
              $(button).removeAttr("disabled");
+             hidden_form();
           }
           else if(data.code==422){
-             var $span_dom = $("input[name={name}]".format({name:data.name})).next("span");
+             var $span_dom = $("input[name='{name}']".format({name:data.name})).next("span");
              $span_dom.css("display","block");
              $span_dom.text(data.info);
              $(button).removeAttr("disabled");
@@ -217,7 +230,7 @@ function add_edit_api(button){
              $(button).removeAttr("disabled");
           }
           else if(data.code==422){
-             var $span_dom = $("input[name={name}]".format({name:data.name})).next("span");
+             var $span_dom = $("input[name='{name}']".format({name:data.name})).next("span");
              $span_dom.css("display","block");
              $span_dom.text(data.info);
              $(button).removeAttr("disabled");
@@ -233,4 +246,10 @@ window.onload = function () {
   $('#userform .wclose').unbind('click').click(function(){
     hidden_form();
   });
+}
+
+
+function input_on_change(input){
+  var temp = $(input).val().Trim();
+  $(input).val(temp);
 }

@@ -31,7 +31,7 @@ function get_user(page){
 }
 
 function get_role(page){
-  $.get("/admin/api/role", param={"page":page}, function(data){
+  $.get("/admin/api/role", function(data){
       var table_data = data.data;
       console.log(data)
       $.each(table_data, function(n, values){
@@ -47,20 +47,11 @@ function get_role(page){
           }
           tr_dom.appendTo("#role tbody");
       });
-
-      if (data.hash_prev){
-          var prev_page = parsInt(data.current_page)-1;
-          $("#role_pagination").append("<li><a href='javascript:void(0)' onclick=get_role("+ prev_page +")>Prev</a></li>");
-      }
-      if (data.has_next){
-          var next_page = parsInt(data.current_page)+1;
-          $("#role_pagination").append("<li><a href='javascript:void(0)' onclick=get_role("+ next_page +")>next</a></li>");
-      }
   })
 }
 
 function get_module(page){
-  $.get("/admin/api/module", param={"page":page}, function(data){
+  $.get("/admin/api/module", function(data){
       var table_data = data.data;
       console.log(data)
       $.each(table_data, function(n, values){
@@ -78,15 +69,6 @@ function get_module(page){
           }
           tr_dom.appendTo("#module tbody");
       });
-
-      if (data.hash_prev){
-          var prev_page = parsInt(data.current_page)-1;
-          $("#module_pagination").append("<li><a href='javascript:void(0)' onclick=get_module("+ prev_page +")>Prev</a></li>");
-      }
-      if (data.has_next){
-          var next_page = parsInt(data.current_page)+1;
-          $("#module_pagination").append("<li><a href='javascript:void(0)' onclick=get_module("+ next_page +")>next</a></li>");
-      }
   })
 }
 
@@ -140,8 +122,6 @@ function draw_graph(){
         myChart.setOption(option);
       })
 }
-
-
 window.onload = function () {
   get_user(1);
   get_role(1);
