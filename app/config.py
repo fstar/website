@@ -26,7 +26,7 @@ MONGO_PASSWORD = cf.get("DEFAULT", "mongo_password")
 LOGIN_EXPIRE_TIME_SECONDS = 3600 * 2
 
 class ConfigObject():
-    SECRET_KEY                     = md5("spider_api".encode("utf-8")).hexdigest()
+    SECRET_KEY                     = md5("myweb".encode("utf-8")).hexdigest()
     WTF_CSRF_SECRET_KEY            = SECRET_KEY
     CSRF_ENABLED                   = True
     DEBUG                          = False

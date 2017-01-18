@@ -16,3 +16,17 @@ def get_or_insert(table, **filter_clause):
     db.session.add(new_row)
     db.session.commit()
     return new_row
+
+def Caesar_code(s, t=10):
+    l = ""
+    for i in s:
+        tmp = ord(i) + t
+        l = l + chr(ord(i) + t)
+    return l
+
+def Caesar_decode(s, t=10):
+    l = ""
+    for i in s:
+        tmp = ord(i) - t
+        l = l + chr(ord(i) - t)
+    return l

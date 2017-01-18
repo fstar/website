@@ -1,0 +1,84 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>小神领域-欢迎你{{ session.get("name")}}</title>
+
+  <!-- Bootstrap -->
+
+  <!-- 新 Bootstrap 核心 CSS 文件 -->
+<link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap.min.css">
+
+<!-- 可选的Bootstrap主题文件（一般不用引入） -->
+<!-- <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap-theme.min.css"> -->
+
+<!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+<script src="http://cdn.bootcss.com/jquery/1.11.1/jquery.min.js"></script>
+
+<!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+<script src="http://cdn.bootcss.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<style>
+  body { padding-bottom: 100px; }
+</style>
+</head>
+<nav class="navbar navbar-inverse" role="navigation">
+  <div class="container-fluid">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">图书馆</a>
+      </div>
+
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        <ul class="nav navbar-nav">
+          <li class="dropdown active">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">我 <span class="caret"></span></a>
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="/Library/mybooks">我的书</a></li>
+              <li><a href="/Library/me_to_friend">我的借阅</a></li>
+              <li><a href="/Library/user">我的身份</a></li>
+              <!-- <li class="divider"></li>
+              <li><a href="#">Separated link</a></li>
+              <li class="divider"></li>
+              <li><a href="#">One more separated link</a></li> -->
+            </ul>
+          </li>
+          <li><a href="/Library/books">书目</a></li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right">
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{session["role_name"]}} <span class="caret"></span></a>
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="/index">index</a></li>
+              <li class="divider">
+              <li><a href="/logout">退出</a></li>
+              <!-- </li>
+              <li><a href="#">Separated link</a></li> -->
+            </ul>
+          </li>
+        </ul>
+      </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+</nav>
+<nav class="navbar navbar-inverse navbar-fixed-bottom" role="navigation">
+  <div class="container">
+    <ul class="nav navbar-nav navbar-right">
+      <li><a>登录时间:{{session["last_login_time"]}}</a></li>
+      <li><a>登录IP:{{session["last_IP"]}}</a></li>
+    </ul>
+  </div>
+</nav>
+<div class="container">
+</div>
+<canvas id="Mycanvas" style="position: fixed;left: 0px;top: 0px;z-index: 99999; pointer-events:none;"></canvas>
+<script src="{{url_for('static', filename='js/background.js')}}"></script>
+
+</html>

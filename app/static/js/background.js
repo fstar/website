@@ -9,8 +9,8 @@ context.strokeStyle = 'rgba(255, 255, 0, 0.1)',
 context.strokeWidth = 100,
 context.fillStyle = 'rgba(0, 0, 255, 0.1)';
 var circleArr = [];
-var img = new Image();
-img.src = "/static/img/six.png"
+// var img = new Image();
+// img.src = "/static/img/six.png"
 
 //线条：开始xy坐标，结束xy坐标，线条透明度
 function Line (x, y, _x, _y, o) {
@@ -87,7 +87,7 @@ function draw () {
 
 function draw_background_image(){
   // console.log(img.width, img.height);
-  context.drawImage(img, 0, 0, img.width, img.height);
+  // context.drawImage(img, 0, 0, img.width, img.height);
 }
 
 function draw_background(){

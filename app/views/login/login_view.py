@@ -22,15 +22,19 @@ def login():
             uid                        = user_query.uid
             name                       = user_query.name
             token                      = user_query.token
-            user_query.last_login_time = datetime.datetime.now()
+            t                          = datetime.datetime.now()
+            user_query.last_login_time = t
             user_query.last_IP         = request.remote_addr
             db.session.commit()
 
             role_query                 = Role.query.filter_by(id=user_query.role_id, status=1).first()
             session["uid"]             = uid
+            session["last_login_time"] = t
+            session["last_IP"]         = request.remote_addr
             return succeed_resp(result = 1)
 
 @login_view.route("/logout", methods=["GET"])
 def logout():
     session.clear()
-    return render_template("login/login.html")
+    return redirect(url_for("login_view.login"))
+    # return render_template("login/login.html")

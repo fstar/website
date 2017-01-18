@@ -3,10 +3,14 @@ import re
 import sys
 import time
 
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, session
 from flask_wtf.csrf import CsrfProtect
 from flask_cors import CORS
 from flask_pymongo import PyMongo
+from random import randint
+from app.views.common.utils import *
+
+
 
 from app.common.log import create_logger_handler
 from app.models import db
@@ -37,31 +41,24 @@ def initialize_app(application, config, profile=False):
     application.config.from_object(config)
 
 
+
     # 注册蓝图
     from app.views.login.login_view import login_view
     from app.views.index.index_view import index_view
     from app.views.admin.admin_view import admin_view
-    # from app.views.input_data.input_api import input_data_api_view
-    # from app.views.data.data_view import data_view
-    # from app.views.input_mongodb.input_api import input_mongodb_api_view
+    from app.views.library.library_view import library_view
 
     application.register_blueprint(login_view)
     application.register_blueprint(index_view)
     application.register_blueprint(admin_view)
-    # application.register_blueprint(input_data_api_view)
-    # application.register_blueprint(data_view)
-    # application.register_blueprint(input_mongodb_api_view)
+    application.register_blueprint(library_view)
 
 
-    # restful api 不跨域保护
     csrf = CsrfProtect()
     csrf.init_app(application)
 
-    # csrf.exempt(input_data_api_view)
     csrf.exempt(login_view)
     csrf.exempt(admin_view)
-    # csrf.exempt(data_view)
-    # csrf.exempt(input_mongodb_api_view)
 
 
 def add_request_handler(application, database):
@@ -100,5 +97,9 @@ def add_request_handler(application, database):
     @application.errorhandler(404)
     def page_not_found(error):
         return render_template("404.html"), 404
+
+
+
 app = create_app(db)
 app.jinja_env = app.jinja_env.overlay(cache_size=0)
+app.jinja_env.filters["Caesar_decode"] = Caesar_decode

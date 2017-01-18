@@ -1,0 +1,410 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name='csrf-token' content="{{ csrf_token() }}">
+  <meta name='book_id_list' content="{{ book_id_list }}">
+  <title>小神领域-欢迎你{{ session.get("name")}}</title>
+
+  <!-- Bootstrap -->
+
+  <!-- 新 Bootstrap 核心 CSS 文件 -->
+<link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap.min.css">
+
+<!-- 可选的Bootstrap主题文件（一般不用引入） -->
+<!-- <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap-theme.min.css"> -->
+
+<!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+<script src="http://cdn.bootcss.com/jquery/1.11.1/jquery.min.js"></script>
+
+<!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+<script src="http://cdn.bootcss.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<style>
+  body { padding-bottom: 100px; }
+</style>
+</head>
+<body>
+<nav class="navbar navbar-inverse" role="navigation">
+  <div class="container-fluid">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">图书馆</a>
+      </div>
+
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        <ul class="nav navbar-nav">
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">我 <span class="caret"></span></a>
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="/Library/mybooks">我的书</a></li>
+              <li><a href="/Library/me_to_friend">我的借阅</a></li>
+              <li><a href="/Library/user">我的身份</a></li>
+              <!-- <li class="divider"></li>
+              <li><a href="#">Separated link</a></li>
+              <li class="divider"></li>
+              <li><a href="#">One more separated link</a></li> -->
+            </ul>
+          </li>
+          <li class='active'><a href="/Library/books">书目</a></li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right">
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{session["role_name"]}} <span class="caret"></span></a>
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="/index">index</a></li>
+              <li class="divider">
+              <li><a href="/logout">退出</a></li>
+              <!-- </li>
+              <li><a href="#">Separated link</a></li> -->
+            </ul>
+          </li>
+        </ul>
+      </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+</nav>
+<nav class="navbar navbar-inverse navbar-fixed-bottom" role="navigation">
+  <div class="container">
+    <ul class="nav navbar-nav navbar-right">
+      <li><a>登录时间:{{session["last_login_time"]}}</a></li>
+      <li><a>登录IP:{{session["last_IP"]}}</a></li>
+    </ul>
+  </div>
+</nav>
+<div class="container">
+
+  <form class="form-horizontal" role="form" method='GET' action="/Library/books" id='keyword_form'>
+    <div class="form-group">
+     <label class='col-sm-2 control-label' for="keyword">关键字:</label>
+     <div class='col-sm-3'>
+       <input type="text" class="form-control" name="keyword" id="keyword" placeholder="关键词">
+     </div>
+    </div>
+    <div class="form-group">
+     <label class='col-sm-2 control-label'>图书状态:</label>
+     <div class='col-sm-6'>
+        <label class="radio-inline">
+          <input type="radio" name="status" value="0"> 空闲
+        </label>
+        <label class="radio-inline">
+          <input type="radio" name="status" value="1"> 被关注
+        </label>
+        <label class="radio-inline">
+          <input type="radio" name="status" value="2"> 已借出
+        </label>
+        <label class="radio-inline">
+          <input type="radio" name="status" value='' checked='true'> 全部
+        </label>
+      </div>
+    </div>
+    <div class='row'>
+      <div class='col-sm-1 col-xs-2 col-sm-offset-1'>
+        <div class='btn-group'>
+          <button type="submit" class="btn btn-default">搜索</button>
+        </div>
+      </div>
+      <div class='col-sm-1 col-xs-2'>
+        <div class='btn-group'>
+            <button type="button" class="btn btn-default" onclick='hidden_keyword_form()'>精确匹配</button>
+        </div>
+      </div>
+    </div>
+
+  </form>
+
+<!-- ########### 以下是精确匹配模式 #############  -->
+  <form class="form-horizontal" role="form" method='GET' action="/Library/books" id='no_keyword_form' hidden="true">
+    <div class="form-group">
+     <label class='col-sm-2 control-label' for="book_name">书名:</label>
+     <div class='col-sm-3'>
+       <input type="text" class="form-control" name="book_name" id="book_name" placeholder="书名">
+     </div>
+    </div>
+
+    <div class="form-group">
+     <label class='col-sm-2 control-label'>分类:</label>
+     <div class="col-sm-3">
+       <input type="text" class="form-control" name='classify' id="classify" placeholder="分类" readonly="true">
+     </div>
+     <div class="col-sm-2">
+       <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">
+         展开
+       </button>
+     </div>
+    </div>
+
+    <div class="form-group">
+     <label class='col-sm-2 control-label' for="author">作者:</label>
+     <div class='col-sm-3'>
+       <input type="text" class="form-control" name="author" id="author" placeholder="作者">
+     </div>
+    </div>
+
+    <div class="form-group">
+     <label class='col-sm-2 control-label' for="publisher">出版社:</label>
+     <div class='col-sm-3'>
+       <input type="text" class="form-control" name="publisher" id="publisher" placeholder="出版社">
+     </div>
+    </div>
+
+    <div class="form-group">
+     <label class='col-sm-2 control-label'>图书状态:</label>
+     <div class='col-sm-6'>
+        <label class="radio-inline">
+          <input type="radio" name="status" value="0"> 空闲
+        </label>
+        <label class="radio-inline">
+          <input type="radio" name="status" value="1"> 被关注
+        </label>
+        <label class="radio-inline">
+          <input type="radio" name="status" value="2"> 已借出
+        </label>
+        <label class="radio-inline">
+          <input type="radio" name="status" value='' checked='true'> 全部
+        </label>
+      </div>
+    </div>
+    <div class='row'>
+      <div class='col-sm-1 col-xs-2 col-sm-offset-1'>
+        <div class='btn-group'>
+          <button type="submit" class="btn btn-default">搜索</button>
+        </div>
+      </div>
+      <div class='col-sm-1 col-xs-2'>
+        <div class='btn-group'>
+            <button type="button" class="btn btn-default" onclick='hidden_no_keyword_form()'>模糊匹配</button>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <div class="page-header">  </div>
+  <!-- ######### 以下是表格 #############  -->
+  <div class='row'>
+    <nav>
+      <ul class="pager">
+        {% if data.has_prev %}
+        <li class="previous"><a href="{{pre_href}}">&larr; 上一页</a></li>
+        {% else %}
+        <li class="previous disabled"><a href="#">&larr; 上一页</a></li>
+        {% endif %}
+
+        {% if data.has_next %}
+        <li class="next"><a href="{{next_href}}">&rarr; 下一页</a></li>
+        {% else %}
+        <li class="next disabled"><a href="#">&rarr; 下一页</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% if not data.items %}
+    <div class="alert alert-danger" role='alert'>没有匹配的结果!</div>
+    {% else %}
+    <div class="alert alert-success" role='alert'>共有{{data.total}}个结果</div>
+
+    {% endif %}
+    {% for item in data.items %}
+      <div class='row'>
+         <div class='row' id='{{item.id}}'>
+           <div class='col-sm-4 col-xs-6 col-sm-offset-2 col-xs-offset-1'>
+             <h3>书名:<font color='blue'>{{item.name}}</font></h3>
+             <h4>分类:{{item.classify}}</h4>
+             <h4>作者:{{item.author}}</h4>
+             <h4>出版社:{{item.publisher}}</h4>
+             <h4>出借人:{{item.lender_name}}</h4>
+             <h4>介绍: {{item.desc}}</h4>
+             {% if item.status == 0 %}
+             <h4>状态: <span class="label label-primary">空闲</span></h4>
+             {% elif item.status == 1%}
+             <h4>状态: <span class="label label-warning">预定中</span></h4>
+             {% elif item.status == 2%}
+             <h4>状态: <span class="label label-danger">借出中</span></h4>
+             {% endif %}
+           </div>
+         </div>
+
+         <div class='row'>
+           <div class='col-sm-2 col-sm-offset-10 col-xs-2 col-xs-offset-9'>
+             {% if borrow_dict.get(item.id) == 3 %}
+              <button type="button" class="btn btn-primary" disabled='true'>你已预订</button>
+             {% elif borrow_dict.get(item.id) == 1 %}
+              <button type="button" class="btn btn-primary" disabled='true'>你已借到</button>
+             {% else %}
+             <button type="button" data-id='{{item.id}}' data-name='{{item.name}}' class="btn btn-primary" data-toggle="modal" data-target="#yuding">预定</button>
+             {% endif %}
+           </div>
+         </div>
+      </div>
+      <div class="page-header">  </div>
+    {% endfor %}
+    <nav>
+      <ul class="pager">
+        {% if data.has_prev %}
+        <li class="previous"><a href="{{pre_href}}">&larr; 上一页</a></li>
+        {% else %}
+        <li class="previous disabled"><a href="#">&larr; 上一页</a></li>
+        {% endif %}
+
+        {% if data.has_next %}
+        <li class="next"><a href="{{next_href}}">&rarr; 下一页</a></li>
+        {% else %}
+        <li class="next disabled"><a href="#">&rarr; 下一页</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+</div>
+<canvas id="Mycanvas" style="position: fixed;left: 0px;top: 0px;z-index: 99999; pointer-events:none;"></canvas>
+<script src="{{url_for('static', filename='js/background.js')}}"></script>
+
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">分类</h4>
+      </div>
+      <div class="modal-body">
+        <div class="panel panel-default">
+           {% for key, value in classify_list.items() %}
+             <div class="panel-heading">
+               <h3 class="panel-title">{{ key }}</h3>
+             </div>
+
+             {% for s_key, s_value in value.items() %}
+               <label class="checkbox-inline" style='margin-left: 10px;'>
+                 {% if s_value == 1%}
+                    <input type="checkbox" value="{{s_key}}" checked="true"> {{s_key}}
+                 {% else %}
+                    <input type="checkbox" value="{{s_key}}" > {{s_key}}
+                 {% endif %}
+               </label>
+             {% endfor %}
+           {% endfor %}
+           <div class='panel-heading'>
+             <h3 class='panel-title'>其他</h3>
+           </div>
+             <input type='text' class="form-control" name='other_classify' id="other_classify"
+             placeholder="自定义类型, 多个类型用 英文逗号(',') 隔开" autocomplete="off" value=""></input>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">确定</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="yuding" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">预定确认</h4>
+      </div>
+      <div class="modal-body">
+          <input type='hidden' name='book_id' id='book_id'></input>
+          <div id='modal_book_name'>
+
+          </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" onclick="book_book()">确定</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal">取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+<script>
+  <!-- 填写分类input -->
+    function check_classify(){
+       var checkbox_dom = $("input[type='checkbox']:checked");
+       var classify_list = [];
+       $.each(checkbox_dom, function(index, value, array){
+         classify_list.push($(value).val());
+       })
+       var other_classify = $("#other_classify").val();
+       if (other_classify.length>0){
+         classify_list.push(other_classify);
+       }
+       var classify = classify_list.join(",");
+       $("input[name='classify']").val(classify);
+    }
+  <!-- 隐藏分类框触发事件 -->
+    $('#myModal').on('hidden.bs.modal', function (e) {
+        check_classify();
+    })
+  <!-- 预定框触发事件 -->
+    $('#yuding').on('show.bs.modal', function (e) {
+        var btn = $(e.relatedTarget);
+        var id = btn.attr("data-id");
+        var name = btn.attr("data-name");
+        console.log(id, name);
+        $("#book_id").val(id);
+        var dom = $("<h3>书名:<font color='blue' >"+name+"</font></h3>");
+        $("#modal_book_name").append(dom);
+
+    })
+  <!-- 点击 精确匹配 按钮事件 -->
+    function hidden_keyword_form(){
+      var $wbox = $("#keyword_form");
+      $wbox.hide();
+      var $wwbox = $("#no_keyword_form");
+      $wwbox.show();
+    }
+<!--  点击 模糊匹配 按钮事件 -->
+    function hidden_no_keyword_form(){
+      var $wbox = $("#no_keyword_form");
+      $wbox.hide();
+      var $wwbox = $("#keyword_form");
+      $wwbox.show();
+    }
+<!-- 点击 预定 按钮事件  -->
+    function book_book(){
+       var book_id = $("#book_id").val();
+       var csrftoken = $('meta[name=csrf-token]').attr('content')
+       $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                }
+            }
+        })
+       if (book_id.length ==0){
+         return;
+       }else{
+          $.ajax({
+            url:"/Library/reserve_book",
+            data:{book_id:book_id},
+            type:"POST",
+            success:function(data){
+              alert(data.info);
+              if (data.status!=-1){
+                var $span_dom = $("#"+data.book_id+" div h4 span[class='label label-primary']");
+                $span_dom.attr("class","label label-warning");
+                $span_dom.text("预定中");
+                $("#"+data.book_id+" + div div").html("<button type='button' class='btn btn-primary' disabled='true'>你已预订</button>");
+                $('#yuding').modal('hide');
+              }else{
+                window.location.reload();
+              }
+            }
+          })
+       }
+    }
+
+    function check_book_status(){
+
+    }
+</script>
+</html>
