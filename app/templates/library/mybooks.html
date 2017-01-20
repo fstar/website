@@ -3,6 +3,8 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name='csrf-token' content="{{ csrf_token() }}">
+
   <title>小神领域-欢迎你{{ session.get("name")}}</title>
 
   <!-- Bootstrap -->
@@ -21,7 +23,12 @@
 <style>
   body { padding-bottom: 100px; }
 </style>
+<script>
+  $(function () { $("[data-toggle='tooltip']").tooltip(); });
+  $(function () { $("[data-toggle='popover']").popover(); });
+</script>
 </head>
+<body>
 <nav class="navbar navbar-inverse" role="navigation">
   <div class="container-fluid">
       <!-- Brand and toggle get grouped for better mobile display -->
@@ -77,8 +84,182 @@
   </div>
 </nav>
 <div class="container">
+  <div class="page-header">
+    <h1>我的书<small><a class='btn btn-default btn-xs' href="/Library/add_edit_book">添加</a></small></h1>
+  </div>
+
+
+  <nav>
+    <ul class="pager">
+      {% if data.has_prev %}
+      <li class="previous"><a href="{{pre_href}}">&larr; 上一页</a></li>
+      {% else %}
+      <li class="previous disabled"><a href="#">&larr; 上一页</a></li>
+      {% endif %}
+      <li></li>
+      {% if data.has_next %}
+      <li class="next"><a href="{{next_href}}">&rarr; 下一页</a></li>
+      {% else %}
+      <li class="next disabled"><a href="#">&rarr; 下一页</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  <!-- 以下是表格 -->
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>书名</th>
+          <th>分类</th>
+          <th>作者</th>
+          <th>出版社</th>
+          <th>简介</th>
+          <th>状态</th>
+          <th>借书人</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in data.items %}
+        <tr id='{{ item.id }}'>
+          <td>{{item.name}}</td>
+          <td>{{item.classify}}</td>
+          <td>{{item.author}}</td>
+          <td>{{item.publisher}}</td>
+          <td>
+            {% if item.desc %}
+            <button type="button" class="btn btn-info" data-title='{{item.name}}:简介' data-content='{{item.desc}}' data-toggle="modal" data-target="#myModal">详细</button>
+            {% else %}
+            <button type="button" class="btn btn-info" data-title='{{item.name}}:简介' data-content='空' data-toggle="modal" data-target="#myModal">详细</button>
+            {% endif %}
+          </td>
+
+          <td>
+            {% if item.status == 0 %}
+            <h4><span class="label label-primary">空闲</span></h4>
+            {% elif item.status == 1%}
+            <h4><span class="label label-warning">预定中</span></h4>
+            {% elif item.status == 2%}
+            <h4><span class="label label-danger">借出中</span></h4>
+            {% elif item.status == -1%}
+            <h4><span class="label label-default">下架</span></h4>
+            {% endif %}
+          </td>
+          {% if item.borrower_name %}
+          <td>{{item.borrower_name}}</td>
+          {% else %}
+          <td>无</td>
+          {% endif %}
+          <td>
+            <a href="/Library/add_edit_book?book_id={{item.id}}" class='btn btn-primary'>修改</a>
+
+            {% if item.status != -1%}
+            <button type='button' class='btn btn-danger' data-id='{{item.id}}' onclick="change_book_status(this)">下架</button>
+            {% elif item.status == -1%}
+            <button type='button' class='btn btn-success' data-id='{{item.id}}' onclick="change_book_status(this)">上架</button>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <nav>
+    <ul class="pager">
+      {% if data.has_prev %}
+      <li class="previous"><a href="{{pre_href}}">&larr; 上一页</a></li>
+      {% else %}
+      <li class="previous disabled"><a href="#">&larr; 上一页</a></li>
+      {% endif %}
+
+
+
+
+      {% if data.has_next %}
+      <li class="next"><a href="{{next_href}}">&rarr; 下一页</a></li>
+      {% else %}
+      <li class="next disabled"><a href="#">&rarr; 下一页</a></li>
+      {% endif %}
+    </ul>
+  </nav>
 </div>
 <canvas id="Mycanvas" style="position: fixed;left: 0px;top: 0px;z-index: 99999; pointer-events:none;"></canvas>
 <script src="{{url_for('static', filename='js/background.js')}}"></script>
 
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel"></h4>
+      </div>
+      <div class="modal-body">
+
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+<script>
+  var csrftoken = $('meta[name=csrf-token]').attr('content')
+  $.ajaxSetup({
+       beforeSend: function(xhr, settings) {
+           if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+               xhr.setRequestHeader("X-CSRFToken", csrftoken)
+           }
+       }
+   })
+   <!-- 模态窗填充 -->
+  $('#myModal').on('show.bs.modal', function (e) {
+     var btn = $(e.relatedTarget);
+     var title = btn.attr("data-title");
+     var content = btn.attr("data-content");
+     $("#myModalLabel").text(title);
+     $(".modal-body").text(content);
+  })
+
+  <!-- 修改书目 上架 下架 状态 -->
+  function change_book_status(obj){
+    var btn = $(obj);
+    btn.attr("disabled",true);
+    var book_id = btn.attr("data-id");
+    $.ajax({
+      type:'POST',
+      async:false,
+      data:{book_id:book_id},
+      url:"/Library/change_book_status",
+      success:function(data){
+        alert(data.info);
+        if(data.status == 0){
+          return;
+        }else if(data.status == 1){
+          if(data.book_status == 0){
+            $("#"+book_id+" td h4 span").attr("class","label label-primary");
+            $("#"+book_id+" td h4 span").text("空闲");
+          }else if(data.book_status == 1){
+            $("#"+book_id+" td h4 span").attr("class","label label-warning");
+            $("#"+book_id+" td h4 span").text("预定中");
+          }else if(data.book_status == 2){
+            $("#"+book_id+" td h4 span").attr("class","label label-danger");
+            $("#"+book_id+" td h4 span").text("借出中");
+          }else if(data.book_status == -1){
+            $("#"+book_id+" td h4 span").attr("class","label label-default");
+            $("#"+book_id+" td h4 span").text("下架");
+          }
+          if(data.book_status == -1){
+            btn.attr("class", "btn btn-success");
+            btn.text("上架");
+          }else{
+            btn.attr("class", "btn btn-danger");
+            btn.text("下架");
+          }
+
+        }
+      }
+    })
+    btn.removeAttr('disabled');
+  }
+</script>
 </html>

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name='csrf-token' content="{{ csrf_token() }}">
   <meta name='book_id_list' content="{{ book_id_list }}">
+  <meta name="keyword_list" content="{{keyword_list}}">
   <title>小神领域-欢迎你{{ session.get("name")}}</title>
 
   <!-- Bootstrap -->
@@ -20,6 +21,7 @@
 
 <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
 <script src="http://cdn.bootcss.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<script src="/static/js/highlight_keyword.js"></script>
 <style>
   body { padding-bottom: 100px; }
 </style>
@@ -210,22 +212,23 @@
     <div class="alert alert-success" role='alert'>共有{{data.total}}个结果</div>
 
     {% endif %}
+    <div class='row'  id='book_content'>
     {% for item in data.items %}
       <div class='row'>
          <div class='row' id='{{item.id}}'>
            <div class='col-sm-4 col-xs-6 col-sm-offset-2 col-xs-offset-1'>
              <h3>书名:<font color='blue'>{{item.name}}</font></h3>
-             <h4>分类:{{item.classify}}</h4>
-             <h4>作者:{{item.author}}</h4>
-             <h4>出版社:{{item.publisher}}</h4>
-             <h4>出借人:{{item.lender_name}}</h4>
-             <h4>介绍: {{item.desc}}</h4>
+             <h4>分类:{{item.classify if item.classify != None}}</h4>
+             <h4>作者:{{item.author if item.author != None}}</h4>
+             <h4>出版社:{{item.publisher if item.publisher != None}}</h4>
+             <h4>出借人:{{item.lender_name if item.lender_name != None}}</h4>
+             <h4>介绍: {{item.desc if item.desc != None}}</h4>
              {% if item.status == 0 %}
-             <h4>状态: <span class="label label-primary">空闲</span></h4>
+             <h4>状态: <span class="label label-primary status">新书</span></h4>
              {% elif item.status == 1%}
-             <h4>状态: <span class="label label-warning">预定中</span></h4>
+             <h4>状态: <span class="label label-warning status">预定中</span></h4>
              {% elif item.status == 2%}
-             <h4>状态: <span class="label label-danger">借出中</span></h4>
+             <h4>状态: <span class="label label-danger status">借出中</span></h4>
              {% endif %}
            </div>
          </div>
@@ -244,6 +247,7 @@
       </div>
       <div class="page-header">  </div>
     {% endfor %}
+    </div>
     <nav>
       <ul class="pager">
         {% if data.has_prev %}
@@ -326,6 +330,14 @@
 </div>
 </body>
 <script>
+  var csrftoken = $('meta[name=csrf-token]').attr('content')
+  $.ajaxSetup({
+       beforeSend: function(xhr, settings) {
+           if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+               xhr.setRequestHeader("X-CSRFToken", csrftoken)
+           }
+       }
+   })
   <!-- 填写分类input -->
     function check_classify(){
        var checkbox_dom = $("input[type='checkbox']:checked");
@@ -352,6 +364,7 @@
         console.log(id, name);
         $("#book_id").val(id);
         var dom = $("<h3>书名:<font color='blue' >"+name+"</font></h3>");
+        $("#modal_book_name").empty();
         $("#modal_book_name").append(dom);
 
     })
@@ -369,17 +382,10 @@
       var $wwbox = $("#keyword_form");
       $wwbox.show();
     }
-<!-- 点击 预定 按钮事件  -->
+<!-- 点击 确定 按钮事件  -->
     function book_book(){
        var book_id = $("#book_id").val();
-       var csrftoken = $('meta[name=csrf-token]').attr('content')
-       $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
-                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
-                    xhr.setRequestHeader("X-CSRFToken", csrftoken)
-                }
-            }
-        })
+
        if (book_id.length ==0){
          return;
        }else{
@@ -390,10 +396,10 @@
             success:function(data){
               alert(data.info);
               if (data.status!=-1){
-                var $span_dom = $("#"+data.book_id+" div h4 span[class='label label-primary']");
-                $span_dom.attr("class","label label-warning");
+                var $span_dom = $("#"+data.book_id+" div h4 span[class='label label-primary status']");
+                $span_dom.attr("class","label label-warning status");
                 $span_dom.text("预定中");
-                $("#"+data.book_id+" + div div").html("<button type='button' class='btn btn-primary' disabled='true'>你已预订</button>");
+                $("#"+data.book_id+" + div div").html("<button type='button' class='btn btn-primary status' disabled='true'>你已预订</button>");
                 $('#yuding').modal('hide');
               }else{
                 window.location.reload();
@@ -403,8 +409,51 @@
        }
     }
 
-    function check_book_status(){
+    function check_book_status(){   // 轮询函数
+      var book_id_list = $("meta[name='book_id_list']").attr('content');
+       $.ajax({
+          type:"POST",
+          url:"/Library/check_book",
+          data:{book_id_list:book_id_list},
+          success:function(data){
+            $.each(data.data, function(n,value){
+                if (value.status == -1){
+                  var $span_dom = $("#"+n+" div h4 span.status");
+                  $span_dom.attr("class", "label label-default status");
+                  $span_dom.text("已下架");
+                  $("#"+n+" + div div").html("<button type='button' class='btn btn-primary status' disabled='true'>已下架</button>");
+                  return true;
+                }else if(value.status == 0){
+                  var $span_dom = $("#"+n+" div h4 span.status");
+                  $span_dom.attr("class", "label label-primary status");
+                  $span_dom.text("空闲");
+                }else if(value.status == 1){
+                  var $span_dom = $("#"+n+" div h4 span.status");
+                  $span_dom.attr("class", "label label-warning status");
+                  $span_dom.text("预定中");
+                }else if(value.status == 2){
+                  var $span_dom = $("#"+n+" div h4 span.status");
+                  $span_dom.attr("class", "label label-danger status");
+                  $span_dom.text("出借中");
+                }
 
+                if (value.action == 1){
+                  $("#"+n+" + div div").html("<button type='button' class='btn btn-primary' disabled='true'>你已借到</button>");
+                }else if(value.action == 3){
+                  $("#"+n+" + div div").html("<button type='button' class='btn btn-primary' disabled='true'>你已预订</button>");
+                }else{
+                  $("#"+n+" + div div").html("<button type='button' data-id='" + n + "' data-name='"+value.name+"' class='btn btn-primary' data-toggle='modal' data-target='#yuding'>预定</button>");
+                }
+            })
+          }
+       })
     }
+    setInterval('check_book_status()',3000);
+
+    $(function(){
+      var keyword_list = $("meta[name='keyword_list']").attr('content');
+      var hl = new Highlighter();
+      hl.highlight(document.getElementById("book_content"), keyword_list);
+    })
 </script>
 </html>

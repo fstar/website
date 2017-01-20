@@ -22,6 +22,7 @@
   body { padding-bottom: 100px; }
 </style>
 </head>
+<body>
 <nav class="navbar navbar-inverse" role="navigation">
   <div class="container-fluid">
       <!-- Brand and toggle get grouped for better mobile display -->
@@ -77,8 +78,130 @@
   </div>
 </nav>
 <div class="container">
+  <div class='row'>
+    <ul class="nav nav-tabs" role="tablist">
+      <li role="presentation"><a href="/Library/me_to_friend">我的书借阅记录</a></li>
+      <li role="presentation" class="active"><a href="#">我的借书记录</a></li>
+    </ul>
+  </div>
+
+  <div class="jumbotron">
+    <p>这里罗列的是你的 "订单记录"</p>
+    <p>你可以在这里看到自己的借阅记录</p>
+  </div>
+
+  <div class='row'>
+
+    <form class="form-horizontal" role="form" method='GET' action="/Library/friend_to_me" id='keyword_form'>
+      <div class="form-group">
+       <label class='col-sm-2 control-label' for="keyword">关键字:</label>
+       <div class='col-sm-3'>
+         <input type="text" class="form-control" name="keyword" id="keyword" placeholder="关键词">
+       </div>
+      </div>
+      <div class="form-group">
+       <label class='col-sm-2 control-label'>操作状态:</label>
+       <div class='col-sm-6'>
+          <label class="radio-inline">
+            <input type="radio" name="action" value="1"> 已借得
+          </label>
+          <label class="radio-inline">
+            <input type="radio" name="action" value="2"> 已归还
+          </label>
+          <label class="radio-inline">
+            <input type="radio" name="action" value="3"> 已预定
+          </label>
+          <label class="radio-inline">
+            <input type="radio" name="action" value="4"> 被拒绝
+          </label>
+          <label class="radio-inline">
+            <input type="radio" name="action" value='' checked='true'> 全部
+          </label>
+        </div>
+      </div>
+      <div class='row'>
+        <div class='col-sm-1 col-xs-2 col-sm-offset-1'>
+          <div class='btn-group'>
+            <button type="submit" class="btn btn-default">搜索</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="row">
+    <nav>
+      <ul class="pager">
+        {% if data.has_prev %}
+        <li class="previous"><a href="{{pre_href}}">&larr; 上一页</a></li>
+        {% else %}
+        <li class="previous disabled"><a href="#">&larr; 上一页</a></li>
+        {% endif %}
+
+        {% if data.has_next %}
+        <li class="next"><a href="{{next_href}}">&rarr; 下一页</a></li>
+        {% else %}
+        <li class="next disabled"><a href="#">&rarr; 下一页</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+    <div class="table-responsive">
+      <table class="table table-bordered" id='table'>
+        <thead>
+          <tr>
+            <th>书名</th>
+            <th>出借人</th>
+            <th>预定时间</th>
+            <th>借出时间</th>
+            <th>归还时间</th>
+            <th>状态</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in data.items %}
+          <tr id='{{ item.id }}'>
+            <td>{{item.book_name}}</td>
+            <td>{{item.lender_name}}</td>
+            <td>{{item.create_time if item.create_time != None}}</td>
+            <td>{{item.borrow_time if item.borrow_time != None}}</td>
+            <td>{{item.return_time if item.return_time != None}}</td>
+
+            <td>
+              {% if item.action == 1 %}
+              <h4><span class="label label-primary status">已借得</span></h4>
+              {% elif item.action == 2%}
+              <h4><span class="label label-success status">已归还</span></h4>
+              {% elif item.action == 3%}
+              <h4><span class="label label-warning status">已预定</span></h4>
+              {% elif item.action == 4%}
+              <h4><span class="label label-danger status">被拒绝</span></h4>
+              {% endif %}
+
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <nav>
+      <ul class="pager">
+        {% if data.has_prev %}
+        <li class="previous"><a href="{{pre_href}}">&larr; 上一页</a></li>
+        {% else %}
+        <li class="previous disabled"><a href="#">&larr; 上一页</a></li>
+        {% endif %}
+
+        {% if data.has_next %}
+        <li class="next"><a href="{{next_href}}">&rarr; 下一页</a></li>
+        {% else %}
+        <li class="next disabled"><a href="#">&rarr; 下一页</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+
 </div>
 <canvas id="Mycanvas" style="position: fixed;left: 0px;top: 0px;z-index: 99999; pointer-events:none;"></canvas>
 <script src="{{url_for('static', filename='js/background.js')}}"></script>
-
+</body>
 </html>

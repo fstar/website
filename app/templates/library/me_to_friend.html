@@ -3,6 +3,9 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name='csrf-token' content="{{ csrf_token() }}">
+  <meta name='keyword_list' content="{{ keyword }}">
+
   <title>小神领域-欢迎你{{ session.get("name")}}</title>
 
   <!-- Bootstrap -->
@@ -18,10 +21,13 @@
 
 <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
 <script src="http://cdn.bootcss.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<script src="/static/js/highlight_keyword.js"></script>
+
 <style>
   body { padding-bottom: 100px; }
 </style>
 </head>
+<body>
 <nav class="navbar navbar-inverse" role="navigation">
   <div class="container-fluid">
       <!-- Brand and toggle get grouped for better mobile display -->
@@ -77,8 +83,195 @@
   </div>
 </nav>
 <div class="container">
+  <div class='row'>
+    <ul class="nav nav-tabs" role="tablist">
+      <li role="presentation" class="active"><a href="#">我的书借阅记录</a></li>
+      <li role="presentation"><a href="/Library/friend_to_me">我的借书记录</a></li>
+    </ul>
+  </div>
+
+  <div class="jumbotron">
+    <p>这里罗列的是 "订单记录"</p>
+    <p>你可以在这里看到自己的图书的借阅记录</p>
+    <p>当你决定借给他人书籍时,请在 <i><font color='red'>确认对方收到书</font></i> 后, 点击 <button class='btn btn-primary'>借出</button> 按钮</p>
+    <p>当然你也可以选择拒绝别人的预定请求^.^</p>
+  </div>
+
+  <div class='row'>
+
+    <form class="form-horizontal" role="form" method='GET' action="/Library/me_to_friend" id='keyword_form'>
+      <div class="form-group">
+       <label class='col-sm-2 control-label' for="keyword">关键字:</label>
+       <div class='col-sm-3'>
+         <input type="text" class="form-control" name="keyword" id="keyword" placeholder="关键词">
+       </div>
+      </div>
+      <div class="form-group">
+       <label class='col-sm-2 control-label'>操作状态:</label>
+       <div class='col-sm-6'>
+          <label class="radio-inline">
+            <input type="radio" name="action" value="1"> 借出
+          </label>
+          <label class="radio-inline">
+            <input type="radio" name="action" value="2"> 归还
+          </label>
+          <label class="radio-inline">
+            <input type="radio" name="action" value="3"> 预定
+          </label>
+          <label class="radio-inline">
+            <input type="radio" name="action" value="4"> 拒绝
+          </label>
+          <label class="radio-inline">
+            <input type="radio" name="action" value='' checked='true'> 全部
+          </label>
+        </div>
+      </div>
+      <div class='row'>
+        <div class='col-sm-1 col-xs-2 col-sm-offset-1'>
+          <div class='btn-group'>
+            <button type="submit" class="btn btn-default">搜索</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="row">
+    <nav>
+      <ul class="pager">
+        {% if data.has_prev %}
+        <li class="previous"><a href="{{pre_href}}">&larr; 上一页</a></li>
+        {% else %}
+        <li class="previous disabled"><a href="#">&larr; 上一页</a></li>
+        {% endif %}
+
+        {% if data.has_next %}
+        <li class="next"><a href="{{next_href}}">&rarr; 下一页</a></li>
+        {% else %}
+        <li class="next disabled"><a href="#">&rarr; 下一页</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+    <div class="table-responsive">
+      <table class="table table-bordered" id='table'>
+        <thead>
+          <tr>
+            <th>书名</th>
+            <th>借阅人</th>
+            <th>预定时间</th>
+            <th>借出时间</th>
+            <th>归还时间</th>
+            <th>操作状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in data.items %}
+          <tr id='{{ item.id }}'>
+            <td>{{item.book_name}}</td>
+            <td>{{item.borrower_name}}</td>
+            <td>{{item.create_time if item.create_time != None}}</td>
+            <td>{{item.borrow_time if item.borrow_time != None}}</td>
+            <td>{{item.return_time if item.return_time != None}}</td>
+
+            <td>
+              {% if item.action == 1 %}
+              <h4><span class="label label-primary status">出借</span></h4>
+              {% elif item.action == 2%}
+              <h4><span class="label label-success status">归还</span></h4>
+              {% elif item.action == 3%}
+              <h4><span class="label label-warning status">预定</span></h4>
+              {% elif item.action == 4%}
+              <h4><span class="label label-danger status">拒绝</span></h4>
+              {% endif %}
+
+            </td>
+
+            <td class='control'>
+              {% if item.action == 3%}
+              <button type='button' class='btn btn-primary' data-id='{{item.id}}' data-content='1' onclick="change_status(this)">借出</button>
+              <button type='button' class='btn btn-danger' data-id='{{item.id}}' data-content='4' onclick="change_status(this)">拒绝</button>
+              {% elif item.action == 1%}
+              <button type='button' class='btn btn-danger' data-id='{{item.id}}' data-content='2' onclick="change_status(this)">归还</button>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <nav>
+      <ul class="pager">
+        {% if data.has_prev %}
+        <li class="previous"><a href="{{pre_href}}">&larr; 上一页</a></li>
+        {% else %}
+        <li class="previous disabled"><a href="#">&larr; 上一页</a></li>
+        {% endif %}
+
+        {% if data.has_next %}
+        <li class="next"><a href="{{next_href}}">&rarr; 下一页</a></li>
+        {% else %}
+        <li class="next disabled"><a href="#">&rarr; 下一页</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
 </div>
 <canvas id="Mycanvas" style="position: fixed;left: 0px;top: 0px;z-index: 99999; pointer-events:none;"></canvas>
 <script src="{{url_for('static', filename='js/background.js')}}"></script>
+</body>
+<script>
 
+  var csrftoken = $('meta[name=csrf-token]').attr('content')
+  $.ajaxSetup({
+       beforeSend: function(xhr, settings) {
+           if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+               xhr.setRequestHeader("X-CSRFToken", csrftoken)
+           }
+       }
+   })
+
+    function change_status(obj){
+      var btn = $(obj);
+      var borrow_lend_id = btn.attr("data-id");
+      var action = btn.attr("data-content");
+
+      $.ajax({
+        type:'POST',
+        async:false,
+        data:{borrow_lend_id:borrow_lend_id, action:action},
+        url:"/Library/change_borrow_lend_status",
+        success:function(data){
+          alert(data.info);
+          if(data.status == 0){
+            return;
+          }else if(data.status == 1){
+            if(data.action == 1){
+              $("#"+borrow_lend_id+" td h4 span").attr("class","label label-primary status");
+              $("#"+borrow_lend_id+" td h4 span").text("借出");
+              $("#"+borrow_lend_id+" td:eq(3)").text(data.update_time);
+            }else if(data.action == 2){
+              $("#"+borrow_lend_id+" td h4 span").attr("class","label label-success status");
+              $("#"+borrow_lend_id+" td h4 span").text("归还");
+              $("#"+borrow_lend_id+" td:eq(4)").text(data.update_time);
+            }else if(data.action == 4){
+              $("#"+borrow_lend_id+" td h4 span").attr("class","label label-danger status");
+              $("#"+borrow_lend_id+" td h4 span").text("拒绝");
+            }
+
+            $("#"+borrow_lend_id+" td[class='control']").empty();
+            if(data.action == 1){
+              var button_dom = $("<button type='button' class='btn btn-danger' data-id='"+borrow_lend_id+"' data-content='2' onclick='change_status(this)'>归还</button>")
+              $("#"+borrow_lend_id+" td[class='control']").append(button_dom);
+            }
+          }
+        }
+      })
+    }
+    $(function(){
+      var keyword_list = $("meta[name='keyword_list']").attr('content');
+      var hl = new Highlighter();
+      hl.highlight(document.getElementById("table"), keyword_list);
+    })
+</script>
 </html>

@@ -78,7 +78,7 @@
   </div>
 </nav>
 <div class="container">
-  <div class="jumbotron">
+  <div class="page-header">
     {% if data %}
     <h1>修改书目</h1>
     {% else %}
@@ -112,7 +112,7 @@
           <label for="author" class="col-sm-2 control-label">作者:</label>
           <div class="col-sm-10">
             <input type="text" class="form-control" name='author' id="author"
-            placeholder="" autocomplete="off" value="{{data['author']}}">
+            placeholder="" autocomplete="off" value="{{data['author'] if data['author'] != None }}">
           </div>
         </div>
 
@@ -120,14 +120,14 @@
           <label for="publisher" class="col-sm-2 control-label">出版社:</label>
           <div class="col-sm-10">
             <input type="text" class="form-control" name='publisher' id="publisher"
-            placeholder="" autocomplete="off" value="{{data['publisher']}}">
+            placeholder="" autocomplete="off" value="{{data['publisher'] if data['publisher'] != None}}">
           </div>
         </div>
 
         <div class="form-group">
           <label for="desc" class="col-sm-2 control-label">简介:</label>
           <div class="col-sm-10">
-            <textarea name='desc' class="form-control" rows="7">{{ data["desc"] }}</textarea>
+            <textarea name='desc' class="form-control" rows="7">{{ data["desc"] if data['desc'] != None }}</textarea>
           </div>
         </div>
 

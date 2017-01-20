@@ -86,10 +86,10 @@ class Library_Book(db.Model):
     classify      = db.Column("classify", VARCHAR(255), nullable=False, default=u'其他')      # 分类(以豆瓣的读书分类作参考, 前端写死), 多标签用逗号隔开
     author        = db.Column('author', VARCHAR(255), nullable=False, default=u"未知")                    # 作者
     publisher     = db.Column('publisher', VARCHAR(255), nullable=False, default=u'其他')                 # 出版社
-    desc          = db.Column("desc", TEXT())                                                            # 描述, 简介, 看点等等
+    desc          = db.Column("desc", TEXT(), default='空')                                                # 描述, 简介, 看点等等
     lender        = db.Column('lender', INTEGER(), db.ForeignKey("Library_User.id"), nullable=False)     # 出借人(书的所有者)id
     borrower      = db.Column('borrower', INTEGER(), db.ForeignKey("Library_User.id"))                   # 借书人id
-    status        = db.Column("status", INTEGER(), nullable=False, default=0)                            # 状态: -1,下架 0,未借出 1,已预订 2,已借出
+    status        = db.Column("status", INTEGER(), nullable=False, default=0)                            # 状态: -1,下架 0,未借出 1,预订中 2,已借出
     create_time   = db.Column("create_time", DATETIME(), default=datetime.datetime.now)                  # 创建时间
     update_time   = db.Column("update_time", DATETIME(), onupdate=datetime.datetime.now)                 # 修改时间
 
@@ -109,16 +109,18 @@ class Borrow_Lend(db.Model):
     __tablename__ = 'Borrow_Lend'
     id            = db.Column("id", INTEGER(), primary_key=True, nullable=False, autoincrement=True)     # id
     book_id       = db.Column("book_id", INTEGER(), db.ForeignKey('Library_Book.id'), nullable=False)    # 书的id
+    lender        = db.Column("lender", INTEGER(), db.ForeignKey('Library_User.id'), nullable=False)     # 出借人的id
     borrower      = db.Column("borrower", INTEGER(), db.ForeignKey('Library_User.id'), nullable=False)   # 借书人的id
-    action        = db.Column("action", INTEGER(), nullable=False)                                     # 动作:1,borrow(借),2,return(还),3,reservation(预定), 4,refuse(拒绝)
+    action        = db.Column("action", INTEGER(), nullable=False)                                       # 动作:1,borrow(借),2,return(还),3,reservation(预定), 4,refuse(拒绝)
     create_time   = db.Column("create_time", DATETIME(), default=datetime.datetime.now)                  # 创建时间
     borrow_time   = db.Column("borrow_time", DATETIME())                                                 # 出借时间
     return_time   = db.Column("return_time", DATETIME())                                                 # 归还时间
     update_time   = db.Column("update_time", DATETIME(), default=datetime.datetime.now, onupdate=datetime.datetime.now)                 # 更新时间
 
-    def __init__(self, book_id, borrower):
+    def __init__(self, book_id, borrower, lender):
         self.book_id  = book_id
         self.borrower = borrower
+        self.lender   = lender
         self.action   = 3
 
 
