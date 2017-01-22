@@ -33,7 +33,7 @@ def permission_check(func):
         token = request.headers.get("token","")
         if not token:   # 如果头部信息里没有token,返回401
             return failed_resp("token missing", 401)
-        user_query = spider_user.query.filter_by(token=token, status=1).first()
+        user_query = User.query.filter_by(token=token, status=1).first()
         if not user_query: # 如果token在数据库里不存在,返回403
             return failed_resp(u"token 错误", 403)
         # 如果token存在,则返回uid

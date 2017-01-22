@@ -3,6 +3,7 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="token" content="{{ session['token'] }}">
   <title>小神领域-欢迎你{{ session.get("name")}}</title>
 
   <!-- Bootstrap -->
@@ -20,6 +21,7 @@
 <script src="http://cdn.bootcss.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
 <style>
   body { padding-bottom: 100px; }
+  li {word-break: break-all;  word-wrap: break-word;}
 </style>
 </head>
 <body>
@@ -87,11 +89,18 @@
   </div>
       <form class="form-horizontal" role="form" method='POST' action="/Library/add_edit_book">
 
-        <div class="form-group">
+        <div class="form-group has-feedback">
           <label for="name" class="col-sm-2 control-label">书名(必填):</label>
-          <div class="col-sm-10">
-            <input type="text" class="form-control" name='name' id="name"
-            placeholder="" autocomplete="off" value="{{data['name']}}" required>
+          <div class="col-sm-8">
+            <input type="text" onchange="input_on_change(this)" class="form-control" name='name' id="name"
+            placeholder="匹配: 书名前缀匹配" autocomplete="off" value="{{data['name']}}" required>
+             <span style='visibility:hidden' class="glyphicon glyphicon-warning-sign form-control-feedback"></span>
+          </div>
+
+          <div id="tooltip_test" class="col-sm-2">
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#search">
+              匹配
+            </button>
           </div>
         </div>
 
@@ -99,7 +108,7 @@
           <label for="classify" class="col-sm-2 control-label">分类:</label>
 
           <div class="col-sm-8">
-            <input type="text" class="form-control" name='classify' id="classify" value="{{data['classify']}}" readonly="true">
+            <input type="text" onchange="input_on_change(this)" class="form-control" name='classify' id="classify" value="{{data['classify']}}" readonly="true">
           </div>
           <div class="col-sm-2">
             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">
@@ -111,7 +120,7 @@
         <div class="form-group">
           <label for="author" class="col-sm-2 control-label">作者:</label>
           <div class="col-sm-10">
-            <input type="text" class="form-control" name='author' id="author"
+            <input onchange="input_on_change(this)" type="text" class="form-control" name='author' id="author"
             placeholder="" autocomplete="off" value="{{data['author'] if data['author'] != None }}">
           </div>
         </div>
@@ -119,8 +128,16 @@
         <div class="form-group">
           <label for="publisher" class="col-sm-2 control-label">出版社:</label>
           <div class="col-sm-10">
-            <input type="text" class="form-control" name='publisher' id="publisher"
+            <input onchange="input_on_change(this)" type="text" class="form-control" name='publisher' id="publisher"
             placeholder="" autocomplete="off" value="{{data['publisher'] if data['publisher'] != None}}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="publish_time" class="col-sm-2 control-label">出版时间:</label>
+          <div class="col-sm-10">
+            <input onchange="input_on_change(this)" type="text" class="form-control" name='publish_time' id="publish_time"
+            placeholder="" autocomplete="off" value="{{data['publish_time'] if data['publish_time'] != None}}">
           </div>
         </div>
 
@@ -173,8 +190,8 @@
            <div class='panel-heading'>
              <h3 class='panel-title'>其他</h3>
            </div>
-             <input type='text' class="form-control" name='other_classify' id="other_classify"
-             placeholder="自定义类型, 多个类型用 英文逗号(',') 隔开" autocomplete="off" value=""></input>
+             <input onchange="input_on_change(this)" type='text' class="form-control" name='other_classify' id="other_classify"
+             placeholder="自定义类型, 多个类型用 英文逗号(',') 隔开" autocomplete="off" value="{{ data['classify'] }}"></input>
         </div>
       </div>
       <div class="modal-footer">
@@ -183,8 +200,76 @@
     </div>
   </div>
 </div>
+
+<div class="modal fade" id="search" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">匹配结果</h4>
+      </div>
+      <div class="modal-body">
+          <ul class='list-group' id="search_list">
+
+
+          </ul>
+      </div>
+      <div class="modal-footer">
+        <nav>
+          <ul class="pager">
+            <li class="previous disabled" ><a data-keyword date-page date-onepage href="#" onclick="next_page(this)">&larr; 上一页</a></li>
+            <li class="next disabled"><a  data-keyword date-page date-onepage  href="#" onclick="next_page(this)">下一页 &rarr;</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 </body>
 <script>
+
+    $("#tooltip_test").tooltip();
+
+    String.prototype.replaceAll = function (exp, newStr) {
+        return this.replace(new RegExp(exp, "gm"), newStr);
+    };
+
+    /**
+     * 原型：字符串格式化
+     * @param args 格式化参数值
+     */
+    String.prototype.format = function(args) {
+        var result = this;
+        if (arguments.length < 1) {
+            return result;
+        }
+
+        var data = arguments; // 如果模板参数是数组
+        if (arguments.length == 1 && typeof (args) == "object") {
+            // 如果模板参数是对象
+            data = args;
+        }
+        for ( var key in data) {
+            var value = data[key];
+            if (undefined != value) {
+                result = result.replaceAll("\\{" + key + "\\}", value);
+            }
+        }
+        return result;
+    }
+
+    String.prototype.Trim = function(){
+      return this.replace(/(^\s*)|(\s*$)/g, "");
+    }
+    var token = $('meta[name=token]').attr('content');
+    $.ajaxSetup({
+         beforeSend: function(xhr, settings) {
+            xhr.setRequestHeader("Token", token);
+         }
+     })
+
     function check_classify(){
        var checkbox_dom = $("input[type='checkbox']:checked");
        var classify_list = [];
@@ -201,5 +286,122 @@
     $('#myModal').on('hidden.bs.modal', function (e) {
         check_classify();
     })
+
+    function input_on_change(input){ // 在input被修改时, 去除多余的空格
+      var temp = $(input).val().Trim();
+      $(input).val(temp);
+      if (temp.length>0){
+        $("#name + span").css("visibility","hidden");
+      }
+    }
+
+    $("#search").on('show.bs.modal', function(e){ // 搜索框展示时填充数据
+       var keyword = $('#name').val().Trim();
+       if (keyword.length <= 0){
+         var name_input=$("#name");
+         name_input.attr("placeholder","请输入书名!");
+         $("#name + span").css("visibility","visible");
+         return false;
+       }else{
+          get_data(keyword);
+       }
+    })
+
+    function next_page(obj){    // 翻页按钮
+       var btn=$(obj);
+       var keyword = btn.attr("data-keyword");
+       var page = btn.attr("data-page");
+       var one_page = btn.attr("data-onepage");
+       get_data(keyword, page, one_page);
+    }
+
+    function get_data(keyword, page=1, one_page=5){
+      $.ajax({
+         url:"/Library/book_spider_api",
+         data:{keyword:keyword, page:page, one_page:one_page},
+         type:"GET",
+         async:false,
+         headers:{"token":token},
+         error:function(data){
+           search_list_dom.empty();
+           $('<div class="alert alert-danger" role="alert">无结果</div>').appendTo("#search_list");
+         },
+         success:function(data){
+           var dom_str = "<li class='list-group-item' id='result_{id}'>                                <div class=row>                                  <div class='col-sm-3'>                                    <a href='#' class='thumbnail'>                                      <img src='{img_url}'>                                    </a>                                  </div>                                  <div class='col-sm-9'>                                    <ul class='list-group'>                                      <li class='list-group-item'>书名:<span>{name}</span></li>                                      <li class='list-group-item'>作者:<span>{author}</span></li>                                      <li class='list-group-item'>分类:<span>{classify}</span></li>                                      <li class='list-group-item'>出版社:<span>{publisher}</span></li>               <li class='list-group-item'>出版日期:<span>{publish_time}</span></li>                        <li class='list-group-item'>简介:<span>{desc}</span></li>                                    </ul>                                  </div>                                </div>                                <div class='row'>                                  <button class='col-sm-offset-11 col-xs-offset-8' type='button' data-id='{id}' onclick='select_book(this)'> 选择</button>                                </div>                              </li>"
+           var search_list_dom = $("#search_list");
+           search_list_dom.empty()
+           if (data.status == 1 && data.data.length>0){
+               $.each(data.data, function(n, values){
+                 var dom = dom_str.format({
+                   img_url:values["img_url"],
+                   name:values["name"],
+                   author:values["author"],
+                   classify:values["classify"],
+                   publisher:values["publisher"],
+                   desc:values["desc"],
+                   id:values["id"],
+                   publish_time:values["publish_time"]
+                 });
+                 $(dom).appendTo("#search_list");
+               })
+           }else{
+              $('<div class="alert alert-danger" role="alert">无结果</div>').appendTo("#search_list");
+           }
+
+           var footer_dom = $("#search div[class='modal-footer']");
+           var prev_dom = footer_dom.find("li:eq(0)");
+           var next_dom = footer_dom.find("li:eq(1)");
+           if (data.has_prev == 1){
+
+              prev_dom.attr("class","previous");
+              prev_dom.find('a').attr("data-keyword", keyword);
+              prev_dom.find('a').attr("data-page", page*1-1);
+              prev_dom.find('a').attr("data-onepage", one_page);
+           }else{
+             prev_dom.attr("class","previous disabled");
+             prev_dom.find('a').attr("data-keyword", "");
+             prev_dom.find('a').attr("data-page", "");
+             prev_dom.find('a').attr("data-onepage", "");
+
+           }
+           if (data.has_next == 1){
+
+             next_dom.attr("class","next");
+             next_dom.find('a').attr("data-keyword", keyword);
+             next_dom.find('a').attr("data-page", page*1+1);
+             next_dom.find('a').attr("data-onepage", one_page);
+
+           }else{
+             next_dom.attr("class","next disabled");
+             next_dom.find('a').attr("data-keyword", "");
+             next_dom.find('a').attr("data-page", "");
+             next_dom.find('a').attr("data-onepage", "");
+           }
+         }
+      })
+    }
+
+    function select_book(obj){
+      var btn = $(obj);
+      var choose_id = btn.attr("data-id");
+      var choose_dom = $("#result_{id}".format({id:choose_id}));
+      var name = choose_dom.find("li:eq(0) span").text();
+      var author = choose_dom.find("li:eq(1) span").text();
+      var classify = choose_dom.find("li:eq(2) span").text();
+      var publisher = choose_dom.find("li:eq(3) span").text();
+      var publish_time = choose_dom.find("li:eq(4) span").text();
+      var desc = choose_dom.find("li:eq(5) span").text();
+
+      $("input[name='name']").val(name);
+      $("input[name='author']").val(author);
+      var origin_classify = $("input[name='classify']").val();
+      $("input[name='classify']").val(origin_classify+","+classify);
+      $("input[name='other_classify']").val(classify);
+      $("input[name='publisher']").val(publisher);
+      $("input[name='publish_time']").val(publish_time);
+      $("textarea[name='desc']").val(desc);
+
+      $('#search').modal('hide')
+    }
 </script>
 </html>

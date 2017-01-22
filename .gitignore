@@ -7,3 +7,4 @@ app.py
 config.ini
 .vscode
 *.json
+*.sql

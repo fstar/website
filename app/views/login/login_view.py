@@ -31,6 +31,7 @@ def login():
             session["uid"]             = uid
             session["last_login_time"] = t
             session["last_IP"]         = request.remote_addr
+            session["token"]           = token
             return succeed_resp(result = 1)
 
 @login_view.route("/logout", methods=["GET"])

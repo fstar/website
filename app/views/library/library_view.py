@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, request, redirect, session, url_for
 from flask_restful import Resource, Api
 from app.views.common.view_decorators import *
-from app.models import db, Library_User, Library_Book, Borrow_Lend, Library_Classify
+from app.models import db, Library_User, Library_Book, Borrow_Lend, Library_Classify, Library_message
 from app.views.common.utils import *
 import json
 import random
@@ -234,15 +234,16 @@ def Library_add_book():   # 新增和编辑图书页面
             else:
                 return render_template("library/add_book.html", data=book_query, classify=classify)
     else:
-        book_id   = request.form.get("book_id", None)
-        name      = request.form.get("name", None)
-        classify  = request.form.get("classify", None)
-        author    = request.form.get("author", None)
-        publisher = request.form.get("publisher",None)
-        desc      = request.form.get("desc",None)
+        book_id      = request.form.get("book_id", None)
+        name         = request.form.get("name", None)
+        classify     = request.form.get("classify", None)
+        author       = request.form.get("author", None)
+        publisher    = request.form.get("publisher",None)
+        publish_time = request.form.get("publish_time",None)
+        desc         = request.form.get("desc",None)
         lender_id    = session["library_user_id"]
         if not book_id:
-            one = Library_Book(name, lender_id, classify, author, desc, publisher)
+            one = Library_Book(name, lender_id, classify, author, desc, publisher, publish_time)
             db.session.add(one)
             db.session.commit()
             return redirect(url_for("library_view.my_books"))
@@ -252,11 +253,12 @@ def Library_add_book():   # 新增和编辑图书页面
             if not book_query:
                 return render_template("404.html"), 403
             else:
-                book_query.name      = name
-                book_query.classify  = classify
-                book_query.author    = author
-                book_query.desc      = desc
-                book_query.publisher = publisher
+                book_query.name         = name
+                book_query.classify     = classify
+                book_query.author       = author
+                book_query.desc         = desc
+                book_query.publisher    = publisher
+                book_query.publish_time = publish_time
                 db.session.commit()
                 return redirect(url_for("library_view.my_books"))
 
@@ -373,7 +375,9 @@ def me_to_friend(page=1):
                                 Borrow_Lend.create_time.label("create_time"),
                                 Borrow_Lend.borrow_time.label("borrow_time"),
                                 Borrow_Lend.return_time.label("return_time"),
-                                Borrow_Lend.action.label("action")
+                                Borrow_Lend.action.label("action"),
+                                Library_User.phone.label("phone"),
+                                Library_User.address.label("address")
                                 ).order_by(Borrow_Lend.id.desc()).paginate(page, per_page=50, error_out=False)
 
     pre_href = "/Library/me_to_friend/{page}?".format(page=query.prev_num)
@@ -444,7 +448,9 @@ def friend_to_me(page=1):
                                 Borrow_Lend.create_time.label("create_time"),
                                 Borrow_Lend.borrow_time.label("borrow_time"),
                                 Borrow_Lend.return_time.label("return_time"),
-                                Borrow_Lend.action.label("action")
+                                Borrow_Lend.action.label("action"),
+                                Library_User.phone.label("phone"),
+                                Library_User.address.label("address"),
                                 ).order_by(Borrow_Lend.id.desc()).paginate(page, per_page=50, error_out=False)
 
     pre_href = "/Library/friend_to_me/{page}?".format(page=query.prev_num)
@@ -455,6 +461,7 @@ def friend_to_me(page=1):
 
     return render_template("library/friend_to_me.html",data=query, pre_href=pre_href, \
                             next_href=next_href, keyword=keyword)
+
 
 
 def get_book_classify(filter_string=()):  # 获取图书分类表

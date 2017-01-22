@@ -86,14 +86,15 @@ class Library_Book(db.Model):
     classify      = db.Column("classify", VARCHAR(255), nullable=False, default=u'其他')      # 分类(以豆瓣的读书分类作参考, 前端写死), 多标签用逗号隔开
     author        = db.Column('author', VARCHAR(255), nullable=False, default=u"未知")                    # 作者
     publisher     = db.Column('publisher', VARCHAR(255), nullable=False, default=u'其他')                 # 出版社
-    desc          = db.Column("desc", TEXT(), default='空')                                                # 描述, 简介, 看点等等
+    publish_time  = db.Column("publish_time", VARCHAR(255), default=u"未知")                             # 出版时间
+    desc          = db.Column("desc", TEXT(), default='')                                               # 描述, 简介, 看点等等
     lender        = db.Column('lender', INTEGER(), db.ForeignKey("Library_User.id"), nullable=False)     # 出借人(书的所有者)id
     borrower      = db.Column('borrower', INTEGER(), db.ForeignKey("Library_User.id"))                   # 借书人id
     status        = db.Column("status", INTEGER(), nullable=False, default=0)                            # 状态: -1,下架 0,未借出 1,预订中 2,已借出
     create_time   = db.Column("create_time", DATETIME(), default=datetime.datetime.now)                  # 创建时间
     update_time   = db.Column("update_time", DATETIME(), onupdate=datetime.datetime.now)                 # 修改时间
-
-    def __init__(self, name, lender, classify, author, desc, publisher):
+    img_url       = db.Column("img_url", VARCHAR(255))
+    def __init__(self, name, lender, classify, author, desc, publisher, img_url=None):
         self.name   = name
         self.lender = lender
         if classify:
@@ -104,6 +105,8 @@ class Library_Book(db.Model):
             self.desc = desc
         if publisher:
             self.publisher = publisher
+        if img_url:
+            self.img_url = img_url
 
 class Borrow_Lend(db.Model):
     __tablename__ = 'Borrow_Lend'
@@ -134,3 +137,60 @@ class Library_Classify(db.Model):
     id            = db.Column("id", INTEGER(), primary_key=True, nullable=False, autoincrement=True)     # id
     first_level   = db.Column("first_level", VARCHAR(255), nullable=False)                               # 第一层分类
     second_level  = db.Column("second_level", VARCHAR(255), nullable=False)                              # 第二层分类
+
+class Library_message(db.Model):
+    '''
+        保存所有的聊天信息
+        1. 方便留言
+        2. 方便看历史记录
+    '''
+    __tablename__ = 'Library_message'
+    id            = db.Column("id", INTEGER(), primary_key=True, nullable=False, autoincrement=True)     # id
+    sender        = db.Column("sender", INTEGER(), db.ForeignKey('Library_User.id'), nullable=False)     # 发送方id
+    receiver      = db.Column("receiver", INTEGER(), db.ForeignKey('Library_User.id'), nullable=False)   # 接受方id
+    message       = db.Column("message", TEXT(), nullable=False, default="")                             # 消息
+    status        = db.Column("status", INTEGER(), default=0)                                            # 是否已被查看
+
+    def __init__(self, sender, receiver, message, status=0):
+        self.sender   = sender
+        self.receiver = receiver
+        self.message  = message
+        self.status   = status
+
+class Book_Spider(db.Model):
+    '''
+        图书爬虫
+    '''
+    __tablename__ = "Book_Spider"
+    id            = db.Column("id", INTEGER(), primary_key=True, nullable=False, autoincrement=True)     # id
+    name          = db.Column('name', VARCHAR(255),nullable=False)                                       # 书名
+    classify      = db.Column("classify", VARCHAR(255), nullable=False, default=u'其他')                  # 分类
+    author        = db.Column('author', VARCHAR(255), nullable=False, default=u"未知")                    # 作者
+    publisher     = db.Column('publisher', VARCHAR(255), nullable=False, default=u'其他')                 # 出版社
+    publish_time  = db.Column("publish_time", VARCHAR(255))                                              # 出版时间
+    desc          = db.Column("desc", TEXT(), default='空')                                              # 描述, 简介, 看点等等
+    from_web      = db.Column('from_web', VARCHAR(255), nullable=False)                                  # 来源
+    web_id        = db.Column('web_id', VARCHAR(255), nullable=False)                                    # 来源站内的图书id
+    url           = db.Column('url', VARCHAR(255), nullable=False)                                       # 图书详情页url
+    img_url       = db.Column('img_url', TEXT())                                                         # 图书图片组url
+    uid           = db.Column("user_id", INTEGER(), db.ForeignKey("User.uid"), nullable=False)           # 用户表id
+
+    def __init__(self, name, from_web, web_id, url, uid, classify=None, author=None, publisher=None,\
+                 publish_time=None, desc=None, img_url=None):
+        self.name     = name
+        self.from_web = from_web
+        self.web_id   = web_id
+        self.url      = url
+        self.uid      = uid
+        if classify:
+            self.classify = classify
+        if author:
+            self.author = author
+        if publisher:
+            self.publisher = publisher
+        if publish_time:
+            self.publish_time = publish_time
+        if desc:
+            self.desc = desc
+        if img_url:
+            self.img_url = img_url
