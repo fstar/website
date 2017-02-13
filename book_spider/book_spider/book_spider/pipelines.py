@@ -11,9 +11,10 @@ import requests
 
 class BookSpiderPipeline(object):
     def __init__(self):
-        self.host = "http://127.0.0.1:8080/Library/book_spider_api"
-        self.header = {"token":'fx'}
-        self.data = []
+        # self.host = "http://127.0.0.1:8080/Library/book_spider_api"
+        self.host   = "http://114.215.186.236:8888/Library/book_spider_api"
+        self.header = {"token":'fuxin'}
+        self.data   = []
 
     def process_item(self, item, spider):
         if not item:

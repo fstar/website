@@ -8,16 +8,16 @@
   <!-- Bootstrap -->
 
   <!-- 新 Bootstrap 核心 CSS 文件 -->
-<link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap.min.css">
 
 <!-- 可选的Bootstrap主题文件（一般不用引入） -->
-<!-- <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap-theme.min.css"> -->
+<!-- <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap-theme.min.css"> -->
 
 <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
-<script src="http://cdn.bootcss.com/jquery/1.11.1/jquery.min.js"></script>
+<script src="https://cdn.bootcss.com/jquery/1.11.1/jquery.min.js"></script>
 
 <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
-<script src="http://cdn.bootcss.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<script src="https://cdn.bootcss.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
 <style>
   body { padding-bottom: 100px; }
 </style>
@@ -69,14 +69,7 @@
       </div><!-- /.navbar-collapse -->
     </div><!-- /.container-fluid -->
 </nav>
-<nav class="navbar navbar-inverse navbar-fixed-bottom" role="navigation">
-  <div class="container">
-    <ul class="nav navbar-nav navbar-right">
-      <li><a>登录时间:{{session["last_login_time"]}}</a></li>
-      <li><a>登录IP:{{session["last_IP"]}}</a></li>
-    </ul>
-  </div>
-</nav>
+
 <div class="container">
   <div class='row'>
     <ul class="nav nav-tabs" role="tablist">
@@ -200,6 +193,12 @@
     </nav>
   </div>
 
+</div>
+<div class="container">
+  <ul class="nav navbar-nav navbar-right">
+    <li><a>登录时间:{{session["last_login_time"]}}</a></li>
+    <li><a>登录IP:{{session["last_IP"]}}</a></li>
+  </ul>
 </div>
 <canvas id="Mycanvas" style="position: fixed;left: 0px;top: 0px;z-index: 99999; pointer-events:none;"></canvas>
 <script src="{{url_for('static', filename='js/background.js')}}"></script>

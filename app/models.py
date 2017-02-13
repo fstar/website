@@ -72,12 +72,14 @@ class Library_User(db.Model):
     address       = db.Column("address", VARCHAR(500))                                                   # 用户地址
     create_time   = db.Column("create_time", DATETIME(), default=datetime.datetime.now)                  # 创建时间
     update_time   = db.Column("update_time", DATETIME(), onupdate=datetime.datetime.now)                 # 修改时间
+    sex           = db.Column("sex", INTEGER(), default=3)                                               # 性别 1.男 2.女 3.其他
 
-    def __init__(self, user_id, name, phone, address):
+    def __init__(self, user_id, name, phone, address, sex):
         self.user_id = user_id
         self.name    = name
         self.phone   = phone
         self.address = address
+        self.sex     = sex
 
 class Library_Book(db.Model):
     __tablename__ = 'Library_Book'
@@ -85,6 +87,7 @@ class Library_Book(db.Model):
     name          = db.Column("name", VARCHAR(255), nullable=False)                                      # 书名
     classify      = db.Column("classify", VARCHAR(255), nullable=False, default=u'其他')      # 分类(以豆瓣的读书分类作参考, 前端写死), 多标签用逗号隔开
     author        = db.Column('author', VARCHAR(255), nullable=False, default=u"未知")                    # 作者
+    ISBN          = db.Column('ISBN', VARCHAR(255), nullable=False, default=u"")                         # ISBN
     publisher     = db.Column('publisher', VARCHAR(255), nullable=False, default=u'其他')                 # 出版社
     publish_time  = db.Column("publish_time", VARCHAR(255), default=u"未知")                             # 出版时间
     desc          = db.Column("desc", TEXT(), default='')                                               # 描述, 简介, 看点等等
@@ -94,7 +97,7 @@ class Library_Book(db.Model):
     create_time   = db.Column("create_time", DATETIME(), default=datetime.datetime.now)                  # 创建时间
     update_time   = db.Column("update_time", DATETIME(), onupdate=datetime.datetime.now)                 # 修改时间
     img_url       = db.Column("img_url", VARCHAR(255))
-    def __init__(self, name, lender, classify, author, desc, publisher, img_url=None):
+    def __init__(self, name, lender, classify, author, desc, publisher, img_url=None, ISBN=None):
         self.name   = name
         self.lender = lender
         if classify:
@@ -107,6 +110,8 @@ class Library_Book(db.Model):
             self.publisher = publisher
         if img_url:
             self.img_url = img_url
+        if ISBN:
+            self.ISBN = ISBN
 
 class Borrow_Lend(db.Model):
     __tablename__ = 'Borrow_Lend'

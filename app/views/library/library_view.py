@@ -1,6 +1,5 @@
 # -*- coding:utf-8 -*-
 from flask import Blueprint, render_template, request, redirect, session, url_for
-from flask_restful import Resource, Api
 from app.views.common.view_decorators import *
 from app.models import db, Library_User, Library_Book, Borrow_Lend, Library_Classify, Library_message
 from app.views.common.utils import *
@@ -10,10 +9,10 @@ from hashlib import md5
 from sqlalchemy import or_
 from collections import OrderedDict
 import datetime
+from PIL import Image
 
 
 library_view = Blueprint("library_view", __name__)
-library_view_api = Api(library_view)
 
 
 def library_decorator(func):
@@ -31,6 +30,15 @@ def library_decorator(func):
             return func(*args, **kwargs)
     return _func
 
+def library_admin_decorator(func):
+    @wraps(func)
+    def _func(*args, **kwargs):
+        role_id = session["role_id"]
+        if role_id == 1:
+            return func(*args, **kwargs)
+        else:
+            return render_template("404.html"), 403
+    return _func
 
 
 @library_view.route("/Library")
@@ -64,12 +72,13 @@ def Library_user():     # 我的身份页
         phone           = request.form.get("phone", None)
         address         = request.form.get("address", None)
         user_id         = session["uid"]
+        sex             = request.form.get("sex",3)
 
         phone           = Caesar_code(phone, 10)
         address         = Caesar_code(address, 10)
 
         if not library_user_id:
-            one = Library_User(user_id, name, phone, address)
+            one = Library_User(user_id, name, phone, address, sex)
             db.session.add(one)
             db.session.commit()
         else:
@@ -80,6 +89,7 @@ def Library_user():     # 我的身份页
             query.phone   = phone
             query.address = address
             query.user_id = session["uid"]
+            query.sex     = sex
             db.session.commit()
         return redirect(url_for("library_view.Library_books"))
 
@@ -238,12 +248,13 @@ def Library_add_book():   # 新增和编辑图书页面
         name         = request.form.get("name", None)
         classify     = request.form.get("classify", None)
         author       = request.form.get("author", None)
+        ISBN         = request.form.get("ISBN", None)
         publisher    = request.form.get("publisher",None)
         publish_time = request.form.get("publish_time",None)
         desc         = request.form.get("desc",None)
         lender_id    = session["library_user_id"]
         if not book_id:
-            one = Library_Book(name, lender_id, classify, author, desc, publisher, publish_time)
+            one = Library_Book(name, lender_id, classify, author, desc, publisher, publish_time, ISBN=ISBN)
             db.session.add(one)
             db.session.commit()
             return redirect(url_for("library_view.my_books"))
@@ -259,6 +270,7 @@ def Library_add_book():   # 新增和编辑图书页面
                 book_query.desc         = desc
                 book_query.publisher    = publisher
                 book_query.publish_time = publish_time
+                book_query.ISBN         = ISBN
                 db.session.commit()
                 return redirect(url_for("library_view.my_books"))
 
@@ -395,7 +407,6 @@ def me_to_friend(page=1):
 def change_borrow_lend_status():
     borrow_lend_id = request.form.get("borrow_lend_id")
     action = int(request.form.get("action"))
-
     query = Borrow_Lend.query.filter_by(id=borrow_lend_id, lender=session["library_user_id"]).first()
     if not query:
         return succeed_resp(status=0, info=u'条目不存在!')
@@ -417,7 +428,11 @@ def change_borrow_lend_status():
         if action == 1:
             Library_Book.query.filter_by(id=book_id).update({"status":2, "borrower":borrower_id})
         elif action == 2:
-            Library_Book.query.filter_by(id=book_id).update({"status":1, "borrower":None})
+            count = Borrow_Lend.query.filter_by(lender=session["library_user_id"], action=3).count()
+            if count > 0:
+                Library_Book.query.filter_by(id=book_id).update({"status":1, "borrower":None})
+            else:
+                Library_Book.query.filter_by(id=book_id).update({"status":0, "borrower":None})
         db.session.commit()
         return succeed_resp(status=1, info=u'操作成功', action=action, \
                         update_time=update_time.strftime("%Y-%m-%d %H:%M:%S"))
@@ -463,7 +478,6 @@ def friend_to_me(page=1):
                             next_href=next_href, keyword=keyword)
 
 
-
 def get_book_classify(filter_string=()):  # 获取图书分类表
     query = Library_Classify.query.all()
     data = OrderedDict({})
@@ -479,3 +493,22 @@ def get_book_classify(filter_string=()):  # 获取图书分类表
         else:
             data[first_level] = {second_level:status}
     return data
+
+@library_view.route("/Library/rec_code", methods=["POST"])
+@session_check("/Library")
+def rec_code():
+    try:
+        data = request.files.getlist('ISBN_pic')
+        image_data = data[0].stream
+        temp = Image.open(image_data)
+        print (data[0].filename)
+        temp.save("/Users/fuxin/Desktop/pic/"+data[0].filename)
+        image_data = np.array(Image.open(image_data))
+        image_data = cal(image_data)
+        bar_code   = rec_bar(image_data)
+        if bar_code:
+            return succeed_resp(bar_code=bar_code.decode("utf-8"), status=1)
+        else:
+            return succeed_resp(bar_code='', status=0)
+    except:
+        return failed_resp(message="error",status_code=500)

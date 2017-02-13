@@ -27,7 +27,7 @@ def login():
             user_query.last_IP         = request.remote_addr
             db.session.commit()
 
-            role_query                 = Role.query.filter_by(id=user_query.role_id, status=1).first()
+            # role_query                 = Role.query.filter_by(id=user_query.role_id, status=1).first()
             session["uid"]             = uid
             session["last_login_time"] = t
             session["last_IP"]         = request.remote_addr

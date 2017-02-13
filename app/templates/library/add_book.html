@@ -9,16 +9,20 @@
   <!-- Bootstrap -->
 
   <!-- 新 Bootstrap 核心 CSS 文件 -->
-<link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap.min.css">
 
 <!-- 可选的Bootstrap主题文件（一般不用引入） -->
-<!-- <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap-theme.min.css"> -->
+<!-- <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap-theme.min.css"> -->
 
 <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
-<script src="http://cdn.bootcss.com/jquery/1.11.1/jquery.min.js"></script>
+<script src="https://cdn.bootcss.com/jquery/1.11.1/jquery.min.js"></script>
 
 <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
-<script src="http://cdn.bootcss.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<script src="https://cdn.bootcss.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<script src="/static/js/library/barcode.js"></script>
+
+
+
 <style>
   body { padding-bottom: 100px; }
   li {word-break: break-all;  word-wrap: break-word;}
@@ -71,14 +75,7 @@
       </div><!-- /.navbar-collapse -->
     </div><!-- /.container-fluid -->
 </nav>
-<nav class="navbar navbar-inverse navbar-fixed-bottom" role="navigation">
-  <div class="container">
-    <ul class="nav navbar-nav navbar-right">
-      <li><a>登录时间:{{session["last_login_time"]}}</a></li>
-      <li><a>登录IP:{{session["last_IP"]}}</a></li>
-    </ul>
-  </div>
-</nav>
+
 <div class="container">
   <div class="page-header">
     {% if data %}
@@ -98,8 +95,24 @@
           </div>
 
           <div id="tooltip_test" class="col-sm-2">
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#search">
-              匹配
+            <button type="button" class="btn btn-primary" onclick="show_modal()">
+              书名匹配
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="ISBN" class="col-sm-2 control-label">ISBN:</label>
+          <div class="col-sm-7">
+            <input onchange="input_on_change(this)" type="text" class="form-control" name='ISBN' id="ISBN"
+            placeholder="10或者13位的ISBN码" autocomplete="off" value="{{data['ISBN'] if data['ISBN'] != None }}">
+          </div>
+          <div id="ISBN_search" class="col-sm-3">
+            <button type="button" class="btn btn-primary" onclick="search_isbn_button()">
+              ISBN匹配
+            </button>
+            <button id="use_camera" type="button" class="btn btn-primary" onclick="open_camera()" disabled="true">
+              拍照匹配
             </button>
           </div>
         </div>
@@ -160,6 +173,13 @@
         </div>
       </form>
 </div>
+
+<div class="container">
+  <ul class="nav navbar-nav navbar-right">
+    <li><a>登录时间:{{session["last_login_time"]}}</a></li>
+    <li><a>登录IP:{{session["last_IP"]}}</a></li>
+  </ul>
+</div>
 <canvas id="Mycanvas" style="position: fixed;left: 0px;top: 0px;z-index: 99999; pointer-events:none;"></canvas>
 <script src="{{url_for('static', filename='js/background.js')}}"></script>
 
@@ -201,12 +221,12 @@
   </div>
 </div>
 
-<div class="modal fade" id="search" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div class="modal fade" id="search" tabindex="-1" role="dialog" aria-labelledby="myModalLabel_1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-        <h4 class="modal-title" id="myModalLabel">匹配结果</h4>
+        <h4 class="modal-title" id="myModalLabel_1">匹配结果</h4>
       </div>
       <div class="modal-body">
           <ul class='list-group' id="search_list">
@@ -227,181 +247,295 @@
 </div>
 
 
+<div class="modal fade bs-example-modal-lg" id="camera_ui" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-body">
+        <video autoplay id='video' hidden="hidden"></video>
+        <canvas id='canvas'></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 </body>
-<script>
+  <script>
 
-    $("#tooltip_test").tooltip();
+      $("#tooltip_test").tooltip();
 
-    String.prototype.replaceAll = function (exp, newStr) {
-        return this.replace(new RegExp(exp, "gm"), newStr);
-    };
 
-    /**
-     * 原型：字符串格式化
-     * @param args 格式化参数值
-     */
-    String.prototype.format = function(args) {
-        var result = this;
-        if (arguments.length < 1) {
-            return result;
-        }
+      String.prototype.replaceAll = function (exp, newStr) {
+          return this.replace(new RegExp(exp, "gm"), newStr);
+      };
 
-        var data = arguments; // 如果模板参数是数组
-        if (arguments.length == 1 && typeof (args) == "object") {
-            // 如果模板参数是对象
-            data = args;
-        }
-        for ( var key in data) {
-            var value = data[key];
-            if (undefined != value) {
-                result = result.replaceAll("\\{" + key + "\\}", value);
-            }
-        }
-        return result;
-    }
+      /**
+       * 原型：字符串格式化
+       * @param args 格式化参数值
+       */
+      String.prototype.format = function(args) {
+          var result = this;
+          if (arguments.length < 1) {
+              return result;
+          }
 
-    String.prototype.Trim = function(){
-      return this.replace(/(^\s*)|(\s*$)/g, "");
-    }
-    var token = $('meta[name=token]').attr('content');
-    $.ajaxSetup({
-         beforeSend: function(xhr, settings) {
-            xhr.setRequestHeader("Token", token);
-         }
-     })
-
-    function check_classify(){
-       var checkbox_dom = $("input[type='checkbox']:checked");
-       var classify_list = [];
-       $.each(checkbox_dom, function(index, value, array){
-         classify_list.push($(value).val());
-       })
-       var other_classify = $("#other_classify").val();
-       if (other_classify.length>0){
-         classify_list.push(other_classify);
-       }
-       var classify = classify_list.join(",");
-       $("input[name='classify']").val(classify);
-    }
-    $('#myModal').on('hidden.bs.modal', function (e) {
-        check_classify();
-    })
-
-    function input_on_change(input){ // 在input被修改时, 去除多余的空格
-      var temp = $(input).val().Trim();
-      $(input).val(temp);
-      if (temp.length>0){
-        $("#name + span").css("visibility","hidden");
+          var data = arguments; // 如果模板参数是数组
+          if (arguments.length == 1 && typeof (args) == "object") {
+              // 如果模板参数是对象
+              data = args;
+          }
+          for ( var key in data) {
+              var value = data[key];
+              if (undefined != value) {
+                  result = result.replaceAll("\\{" + key + "\\}", value);
+              }
+          }
+          return result;
       }
-    }
 
-    $("#search").on('show.bs.modal', function(e){ // 搜索框展示时填充数据
-       var keyword = $('#name').val().Trim();
-       if (keyword.length <= 0){
-         var name_input=$("#name");
-         name_input.attr("placeholder","请输入书名!");
-         $("#name + span").css("visibility","visible");
-         return false;
-       }else{
-          get_data(keyword);
-       }
-    })
-
-    function next_page(obj){    // 翻页按钮
-       var btn=$(obj);
-       var keyword = btn.attr("data-keyword");
-       var page = btn.attr("data-page");
-       var one_page = btn.attr("data-onepage");
-       get_data(keyword, page, one_page);
-    }
-
-    function get_data(keyword, page=1, one_page=5){
-      $.ajax({
-         url:"/Library/book_spider_api",
-         data:{keyword:keyword, page:page, one_page:one_page},
-         type:"GET",
-         async:false,
-         headers:{"token":token},
-         error:function(data){
-           search_list_dom.empty();
-           $('<div class="alert alert-danger" role="alert">无结果</div>').appendTo("#search_list");
-         },
-         success:function(data){
-           var dom_str = "<li class='list-group-item' id='result_{id}'>                                <div class=row>                                  <div class='col-sm-3'>                                    <a href='#' class='thumbnail'>                                      <img src='{img_url}'>                                    </a>                                  </div>                                  <div class='col-sm-9'>                                    <ul class='list-group'>                                      <li class='list-group-item'>书名:<span>{name}</span></li>                                      <li class='list-group-item'>作者:<span>{author}</span></li>                                      <li class='list-group-item'>分类:<span>{classify}</span></li>                                      <li class='list-group-item'>出版社:<span>{publisher}</span></li>               <li class='list-group-item'>出版日期:<span>{publish_time}</span></li>                        <li class='list-group-item'>简介:<span>{desc}</span></li>                                    </ul>                                  </div>                                </div>                                <div class='row'>                                  <button class='col-sm-offset-11 col-xs-offset-8' type='button' data-id='{id}' onclick='select_book(this)'> 选择</button>                                </div>                              </li>"
-           var search_list_dom = $("#search_list");
-           search_list_dom.empty()
-           if (data.status == 1 && data.data.length>0){
-               $.each(data.data, function(n, values){
-                 var dom = dom_str.format({
-                   img_url:values["img_url"],
-                   name:values["name"],
-                   author:values["author"],
-                   classify:values["classify"],
-                   publisher:values["publisher"],
-                   desc:values["desc"],
-                   id:values["id"],
-                   publish_time:values["publish_time"]
-                 });
-                 $(dom).appendTo("#search_list");
-               })
-           }else{
-              $('<div class="alert alert-danger" role="alert">无结果</div>').appendTo("#search_list");
+      String.prototype.Trim = function(){
+        return this.replace(/(^\s*)|(\s*$)/g, "");
+      }
+      var token = $('meta[name=token]').attr('content');
+      $.ajaxSetup({
+           beforeSend: function(xhr, settings) {
+              xhr.setRequestHeader("Token", token);
            }
+       })
 
-           var footer_dom = $("#search div[class='modal-footer']");
-           var prev_dom = footer_dom.find("li:eq(0)");
-           var next_dom = footer_dom.find("li:eq(1)");
-           if (data.has_prev == 1){
-
-              prev_dom.attr("class","previous");
-              prev_dom.find('a').attr("data-keyword", keyword);
-              prev_dom.find('a').attr("data-page", page*1-1);
-              prev_dom.find('a').attr("data-onepage", one_page);
-           }else{
-             prev_dom.attr("class","previous disabled");
-             prev_dom.find('a').attr("data-keyword", "");
-             prev_dom.find('a').attr("data-page", "");
-             prev_dom.find('a').attr("data-onepage", "");
-
-           }
-           if (data.has_next == 1){
-
-             next_dom.attr("class","next");
-             next_dom.find('a').attr("data-keyword", keyword);
-             next_dom.find('a').attr("data-page", page*1+1);
-             next_dom.find('a').attr("data-onepage", one_page);
-
-           }else{
-             next_dom.attr("class","next disabled");
-             next_dom.find('a').attr("data-keyword", "");
-             next_dom.find('a').attr("data-page", "");
-             next_dom.find('a').attr("data-onepage", "");
-           }
+      function check_classify(){
+         var checkbox_dom = $("input[type='checkbox']:checked");
+         var classify_list = [];
+         $.each(checkbox_dom, function(index, value, array){
+           classify_list.push($(value).val());
+         })
+         var other_classify = $("#other_classify").val();
+         if (other_classify.length>0){
+           classify_list.push(other_classify);
          }
+         var classify = classify_list.join(",");
+         $("input[name='classify']").val(classify);
+      }
+      $('#myModal').on('hidden.bs.modal', function (e) {
+          check_classify();
       })
-    }
 
-    function select_book(obj){
-      var btn = $(obj);
-      var choose_id = btn.attr("data-id");
-      var choose_dom = $("#result_{id}".format({id:choose_id}));
-      var name = choose_dom.find("li:eq(0) span").text();
-      var author = choose_dom.find("li:eq(1) span").text();
-      var classify = choose_dom.find("li:eq(2) span").text();
-      var publisher = choose_dom.find("li:eq(3) span").text();
-      var publish_time = choose_dom.find("li:eq(4) span").text();
-      var desc = choose_dom.find("li:eq(5) span").text();
+      function input_on_change(input){ // 在input被修改时, 去除多余的空格
+        var temp = $(input).val().Trim();
+        $(input).val(temp);
+        if (temp.length>0){
+          $("#name + span").css("visibility","hidden");
+        }
+        if ($(input).attr("name") == "classify"){
+           $("input[name='other_classify']").val(temp);
+        }
+      }
 
-      $("input[name='name']").val(name);
-      $("input[name='author']").val(author);
-      var origin_classify = $("input[name='classify']").val();
-      $("input[name='classify']").val(origin_classify+","+classify);
-      $("input[name='other_classify']").val(classify);
-      $("input[name='publisher']").val(publisher);
-      $("input[name='publish_time']").val(publish_time);
-      $("textarea[name='desc']").val(desc);
+      function show_modal(){ // 搜索框展示时填充数据
+         var keyword = $('#name').val().Trim();
+         if (keyword.length <= 0){
+           var name_input=$("#name");
+           name_input.attr("placeholder","请输入书名!");
+           $("#name + span").css("visibility","visible");
+           return false;
+         }else{
+            get_data(keyword);
+         }
+         $("#search").modal('show');
+      }
 
-      $('#search').modal('hide')
-    }
-</script>
+      function next_page(obj){    // 翻页按钮
+         var btn=$(obj);
+         var keyword = btn.attr("data-keyword");
+         var page = btn.attr("data-page");
+         var one_page = btn.attr("data-onepage");
+         if (keyword.length ==0 || page.length==0 || one_page.length==0){
+           return false;
+         }
+         get_data(keyword, page, one_page);
+      }
+
+      function get_data_database(keyword, page=1, one_page=5){
+        var search_list_dom = $("#search_list");
+        $.ajax({
+           url:"/Library/book_spider_api",
+           data:{keyword:keyword, page:page, one_page:one_page},
+           type:"GET",
+           async:false,
+           headers:{"token":token},
+           error:function(XMLHttpRequest, textStatus, errorThrown){
+             search_list_dom.empty();
+             $('<div class="alert alert-danger" role="alert">无结果</div>').appendTo("#search_list");
+           },
+           success:function(data){
+             var dom_str = "<li class='list-group-item' id='result_{id}'>                                <div class=row>                                  <div class='col-sm-3'>                                    <a href='#' class='thumbnail'>                                      <img src='{img_url}'>                                    </a>                                  </div>                                  <div class='col-sm-9'>                                    <ul class='list-group'>                                      <li class='list-group-item'>书名:<span>{name}</span></li>                                      <li class='list-group-item'>作者:<span>{author}</span></li>                                      <li class='list-group-item'>分类:<span>{classify}</span></li>                                      <li class='list-group-item'>出版社:<span>{publisher}</span></li>               <li class='list-group-item'>出版日期:<span>{publish_time}</span></li>                        <li class='list-group-item'>简介:<span>{desc}</span></li>                                    </ul>                                  </div>                                </div>                                <div class='row'>                                  <button class='col-sm-offset-11 col-xs-offset-8' type='button' data-id='{id}' onclick='select_book(this)'> 选择</button>                                </div>                              </li>"
+             search_list_dom.empty()
+             if (data.status == 1 && data.data.length>0){
+                 $.each(data.data, function(n, values){
+                   var dom = dom_str.format({
+                     img_url:values["img_url"],
+                     name:values["name"],
+                     author:values["author"],
+                     classify:values["classify"],
+                     publisher:values["publisher"],
+                     desc:values["desc"],
+                     id:values["id"],
+                     publish_time:values["publish_time"]
+                   });
+                   $(dom).appendTo("#search_list");
+                 })
+             }else{
+                $('<div class="alert alert-danger" role="alert">无结果</div>').appendTo("#search_list");
+             }
+
+             var footer_dom = $("#search div[class='modal-footer']");
+             var prev_dom = footer_dom.find("li:eq(0)");
+             var next_dom = footer_dom.find("li:eq(1)");
+             if (data.has_prev == 1){
+
+                prev_dom.attr("class","previous");
+                prev_dom.find('a').attr("data-keyword", keyword);
+                prev_dom.find('a').attr("data-page", page*1-1);
+                prev_dom.find('a').attr("data-onepage", one_page);
+             }else{
+               prev_dom.attr("class","previous disabled");
+               prev_dom.find('a').attr("data-keyword", "");
+               prev_dom.find('a').attr("data-page", "");
+               prev_dom.find('a').attr("data-onepage", "");
+
+             }
+             if (data.has_next == 1){
+
+               next_dom.attr("class","next");
+               next_dom.find('a').attr("data-keyword", keyword);
+               next_dom.find('a').attr("data-page", page*1+1);
+               next_dom.find('a').attr("data-onepage", one_page);
+
+             }else{
+               next_dom.attr("class","next disabled");
+               next_dom.find('a').attr("data-keyword", "");
+               next_dom.find('a').attr("data-page", "");
+               next_dom.find('a').attr("data-onepage", "");
+             }
+           }
+        })
+      }
+
+      function get_data(keyword, page=0, one_page=10){
+        var search_list_dom = $("#search_list");
+        search_list_dom.empty();
+        $.ajax({
+           url:"https://api.douban.com/v2/book/search?callback=?",
+           data:{q:keyword, start:page*one_page, count:one_page},
+           async:false,
+           contentType: "application/json; charset=utf-8",
+           dataType: "json",
+           beforeSend:function(){
+             search_list_dom.empty();
+             $('<div class="alert alert-warning" role="alert">请稍等....</div>').appendTo("#search_list");
+           },
+           error:function(data){
+             search_list_dom.empty();
+             $('<div class="alert alert-danger" role="alert">无结果</div>').appendTo("#search_list");
+           },
+           success:function(data){
+             var dom_str = "<li class='list-group-item' id='result_{id}'>                                <div class=row>                                  <div class='col-sm-3'>                                    <a href='#' class='thumbnail'>                                      <img src='{img_url}'>                                    </a>                                  </div>                                  <div class='col-sm-9'>                                    <ul class='list-group'>                                      <li class='list-group-item'>书名:<span>{name}</span></li>                                      <li class='list-group-item'>作者:<span>{author}</span></li>                                      <li class='list-group-item'>分类:<span>{classify}</span></li>                                      <li class='list-group-item'>出版社:<span>{publisher}</span></li>               <li class='list-group-item'>出版日期:<span>{publish_time}</span></li>                        <li class='list-group-item'>简介:<span>{desc}</span></li>                                    </ul>                                  </div>                                </div>                                <div class='row'>                                  <button class='col-sm-offset-11 col-xs-offset-8' type='button' data-id='{id}' ISBN='{ISBN}' onclick='select_book(this)'> 选择</button>                                </div>                              </li>"
+             var search_list_dom = $("#search_list");
+             search_list_dom.empty()
+             if (data.books.length>0){
+                 $.each(data.books, function(n, values){
+                   var img_url =values["image"];
+                   var name = values["title"];
+                   var author = values["author"].join(",")+" 著/"+values["translator"].join(",")+" 译";
+                   var classify_list = [];
+                   $.each(values.tags, function(n,classify){
+                      classify_list.push(classify.title);
+                   });
+                   var classify = classify_list.join(",")
+                   var publisher = values.publisher;
+                   var desc = values.summary;
+                   var id = values['id'];
+                   var publish_time = values.pubdate;
+                   var ISBN_code = values.isbn10?values.isbn10:values.isbn13;
+
+                   var dom = dom_str.format({
+                     img_url: img_url,
+                     name: name,
+                     author: author,
+                     classify:classify,
+                     publisher:publisher,
+                     desc:desc,
+                     id:id,
+                     publish_time:publish_time,
+                     ISBN:ISBN_code
+                   });
+                   $(dom).appendTo("#search_list");
+                 })
+             }else{
+                $('<div class="alert alert-danger" role="alert">无结果</div>').appendTo("#search_list");
+             }
+
+             var footer_dom = $("#search div[class='modal-footer']");
+             var prev_dom = footer_dom.find("li:eq(0)");
+             var next_dom = footer_dom.find("li:eq(1)");
+
+             console.log(one_page*(page*1-1));
+             if (one_page*(page*1-1) >= 0){
+                prev_dom.attr("class","previous");
+                prev_dom.find('a').attr("data-keyword", keyword);
+                prev_dom.find('a').attr("data-page", page*1-1);
+                prev_dom.find('a').attr("data-onepage", one_page);
+             }else{
+               prev_dom.attr("class","previous disabled");
+               prev_dom.find('a').attr("data-keyword", "");
+               prev_dom.find('a').attr("data-page", "");
+               prev_dom.find('a').attr("data-onepage", "");
+
+             }
+             console.log(one_page*(page*1+1));
+             if (one_page*(page*1+1) < data.total){
+               next_dom.attr("class","next");
+               next_dom.find('a').attr("data-keyword", keyword);
+               next_dom.find('a').attr("data-page", page*1+1);
+               next_dom.find('a').attr("data-onepage", one_page);
+
+             }else{
+               next_dom.attr("class","next disabled");
+               next_dom.find('a').attr("data-keyword", "");
+               next_dom.find('a').attr("data-page", "");
+               next_dom.find('a').attr("data-onepage", "");
+             }
+
+           }
+        });
+        //$.ajaxSettings.async = true;
+      }
+
+      function select_book(obj){
+        var btn = $(obj);
+        var choose_id = btn.attr("data-id");
+        var choose_dom = $("#result_{id}".format({id:choose_id}));
+        var name = choose_dom.find("li:eq(0) span").text();
+        var author = choose_dom.find("li:eq(1) span").text();
+        var classify = choose_dom.find("li:eq(2) span").text();
+        var publisher = choose_dom.find("li:eq(3) span").text();
+        var publish_time = choose_dom.find("li:eq(4) span").text();
+        var desc = choose_dom.find("li:eq(5) span").text();
+        var ISBN_code = btn.attr("ISBN");
+
+        $("input[name='name']").val(name);
+        $("input[name='author']").val(author);
+        $("input[name='ISBN']").val(ISBN_code);
+        $("input[name='classify']").val(classify);
+        $("input[name='other_classify']").val(classify);
+        $("input[name='publisher']").val(publisher);
+        $("input[name='publish_time']").val(publish_time);
+        $("textarea[name='desc']").val(desc);
+
+        $('#search').modal('hide');
+      }
+
+  </script>
+  <script src="/static/js/library/add_book.js"></script>
+
 </html>
