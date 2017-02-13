@@ -9,7 +9,6 @@ from hashlib import md5
 from sqlalchemy import or_
 from collections import OrderedDict
 import datetime
-from PIL import Image
 
 
 library_view = Blueprint("library_view", __name__)
