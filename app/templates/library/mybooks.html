@@ -51,6 +51,7 @@
               <li><a href="/Library/mybooks">我的书</a></li>
               <li><a href="/Library/me_to_friend">我的借阅</a></li>
               <li><a href="/Library/user">我的身份</a></li>
+
               <!-- <li class="divider"></li>
               <li><a href="#">Separated link</a></li>
               <li class="divider"></li>
@@ -58,6 +59,11 @@
             </ul>
           </li>
           <li><a href="/Library/books">书目</a></li>
+          {% if session["role_id"] == 1%}
+            <li class='active'>
+              <a href="/Library/admin">后台管理</a>
+            </li>
+          {% endif %}
         </ul>
 
         <ul class="nav navbar-nav navbar-right">
@@ -201,64 +207,64 @@
 </div>
 
 </body>
-<script>
-  var csrftoken = $('meta[name=csrf-token]').attr('content')
-  $.ajaxSetup({
-       beforeSend: function(xhr, settings) {
-           if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
-               xhr.setRequestHeader("X-CSRFToken", csrftoken)
-           }
-       }
-   })
-   <!-- 模态窗填充 -->
-  $('#myModal').on('show.bs.modal', function (e) {
-     var btn = $(e.relatedTarget);
-     var title = btn.attr("data-title");
-     var content = btn.attr("data-content");
-     $("#myModalLabel").text(title);
-     $(".modal-body").text(content);
-  })
-
-  <!-- 修改书目 上架 下架 状态 -->
-  function change_book_status(obj){
-    var btn = $(obj);
-    btn.attr("disabled",true);
-    var book_id = btn.attr("data-id");
-    $.ajax({
-      type:'POST',
-      async:false,
-      data:{book_id:book_id},
-      url:"/Library/change_book_status",
-      success:function(data){
-        alert(data.info);
-        if(data.status == 0){
-          return;
-        }else if(data.status == 1){
-          if(data.book_status == 0){
-            $("#"+book_id+" td h4 span").attr("class","label label-primary");
-            $("#"+book_id+" td h4 span").text("空闲");
-          }else if(data.book_status == 1){
-            $("#"+book_id+" td h4 span").attr("class","label label-warning");
-            $("#"+book_id+" td h4 span").text("预定中");
-          }else if(data.book_status == 2){
-            $("#"+book_id+" td h4 span").attr("class","label label-danger");
-            $("#"+book_id+" td h4 span").text("借出中");
-          }else if(data.book_status == -1){
-            $("#"+book_id+" td h4 span").attr("class","label label-default");
-            $("#"+book_id+" td h4 span").text("下架");
-          }
-          if(data.book_status == -1){
-            btn.attr("class", "btn btn-success");
-            btn.text("上架");
-          }else{
-            btn.attr("class", "btn btn-danger");
-            btn.text("下架");
-          }
-
-        }
-      }
+  <script>
+    var csrftoken = $('meta[name=csrf-token]').attr('content')
+    $.ajaxSetup({
+         beforeSend: function(xhr, settings) {
+             if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                 xhr.setRequestHeader("X-CSRFToken", csrftoken)
+             }
+         }
+     })
+     <!-- 模态窗填充 -->
+    $('#myModal').on('show.bs.modal', function (e) {
+       var btn = $(e.relatedTarget);
+       var title = btn.attr("data-title");
+       var content = btn.attr("data-content");
+       $("#myModalLabel").text(title);
+       $(".modal-body").text(content);
     })
-    btn.removeAttr('disabled');
-  }
-</script>
+
+    <!-- 修改书目 上架 下架 状态 -->
+    function change_book_status(obj){
+      var btn = $(obj);
+      btn.attr("disabled",true);
+      var book_id = btn.attr("data-id");
+      $.ajax({
+        type:'POST',
+        async:false,
+        data:{book_id:book_id},
+        url:"/Library/change_book_status",
+        success:function(data){
+          alert(data.info);
+          if(data.status == 0){
+            return;
+          }else if(data.status == 1){
+            if(data.book_status == 0){
+              $("#"+book_id+" td h4 span").attr("class","label label-primary");
+              $("#"+book_id+" td h4 span").text("空闲");
+            }else if(data.book_status == 1){
+              $("#"+book_id+" td h4 span").attr("class","label label-warning");
+              $("#"+book_id+" td h4 span").text("预定中");
+            }else if(data.book_status == 2){
+              $("#"+book_id+" td h4 span").attr("class","label label-danger");
+              $("#"+book_id+" td h4 span").text("借出中");
+            }else if(data.book_status == -1){
+              $("#"+book_id+" td h4 span").attr("class","label label-default");
+              $("#"+book_id+" td h4 span").text("下架");
+            }
+            if(data.book_status == -1){
+              btn.attr("class", "btn btn-success");
+              btn.text("上架");
+            }else{
+              btn.attr("class", "btn btn-danger");
+              btn.text("下架");
+            }
+
+          }
+        }
+      })
+      btn.removeAttr('disabled');
+    }
+  </script>
 </html>

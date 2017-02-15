@@ -44,6 +44,7 @@
               <li><a href="/Library/mybooks">我的书</a></li>
               <li><a href="/Library/me_to_friend">我的借阅</a></li>
               <li><a href="/Library/user">我的身份</a></li>
+
               <!-- <li class="divider"></li>
               <li><a href="#">Separated link</a></li>
               <li class="divider"></li>
@@ -51,6 +52,11 @@
             </ul>
           </li>
           <li><a href="/Library/books">书目</a></li>
+          {% if session["role_id"] == 1%}
+            <li class='active'>
+              <a href="/Library/admin">后台管理</a>
+            </li>
+          {% endif %}
         </ul>
 
         <ul class="nav navbar-nav navbar-right">

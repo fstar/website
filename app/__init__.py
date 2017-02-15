@@ -47,12 +47,14 @@ def initialize_app(application, config, profile=False):
     from app.views.index.index_view import index_view
     from app.views.admin.admin_view import admin_view
     from app.views.library.library_view import library_view
+    from app.views.library.library_admin_view import library_admin_view
     from app.views.book_spider_api.book_spider_api import book_spider_api_view
 
     application.register_blueprint(login_view)
     application.register_blueprint(index_view)
     application.register_blueprint(admin_view)
     application.register_blueprint(library_view)
+    application.register_blueprint(library_admin_view)
     application.register_blueprint(book_spider_api_view)
 
 

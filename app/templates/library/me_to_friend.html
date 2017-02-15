@@ -57,6 +57,11 @@
             </ul>
           </li>
           <li><a href="/Library/books">书目</a></li>
+          {% if session["role_id"] == 1%}
+            <li>
+              <a href="/Library/admin">后台管理</a>
+            </li>
+          {% endif %}
         </ul>
 
         <ul class="nav navbar-nav navbar-right">
@@ -219,58 +224,58 @@
 <canvas id="Mycanvas" style="position: fixed;left: 0px;top: 0px;z-index: 99999; pointer-events:none;"></canvas>
 <script src="{{url_for('static', filename='js/background.js')}}"></script>
 </body>
-<script>
+  <script>
 
-  var csrftoken = $('meta[name=csrf-token]').attr('content')
-  $.ajaxSetup({
-       beforeSend: function(xhr, settings) {
-           if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
-               xhr.setRequestHeader("X-CSRFToken", csrftoken)
-           }
-       }
-   })
+    var csrftoken = $('meta[name=csrf-token]').attr('content')
+    $.ajaxSetup({
+         beforeSend: function(xhr, settings) {
+             if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                 xhr.setRequestHeader("X-CSRFToken", csrftoken)
+             }
+         }
+     })
 
-    function change_status(obj){
-      var btn = $(obj);
-      var borrow_lend_id = btn.attr("data-id");
-      var action = btn.attr("data-content");
+      function change_status(obj){
+        var btn = $(obj);
+        var borrow_lend_id = btn.attr("data-id");
+        var action = btn.attr("data-content");
 
-      $.ajax({
-        type:'POST',
-        async:false,
-        data:{borrow_lend_id:borrow_lend_id, action:action},
-        url:"/Library/change_borrow_lend_status",
-        success:function(data){
-          alert(data.info);
-          if(data.status == 0){
-            return;
-          }else if(data.status == 1){
-            if(data.action == 1){
-              $("#"+borrow_lend_id+" td h4 span").attr("class","label label-primary status");
-              $("#"+borrow_lend_id+" td h4 span").text("借出");
-              $("#"+borrow_lend_id+" td:eq(3)").text(data.update_time);
-            }else if(data.action == 2){
-              $("#"+borrow_lend_id+" td h4 span").attr("class","label label-success status");
-              $("#"+borrow_lend_id+" td h4 span").text("归还");
-              $("#"+borrow_lend_id+" td:eq(4)").text(data.update_time);
-            }else if(data.action == 4){
-              $("#"+borrow_lend_id+" td h4 span").attr("class","label label-danger status");
-              $("#"+borrow_lend_id+" td h4 span").text("拒绝");
-            }
+        $.ajax({
+          type:'POST',
+          async:false,
+          data:{borrow_lend_id:borrow_lend_id, action:action},
+          url:"/Library/change_borrow_lend_status",
+          success:function(data){
+            alert(data.info);
+            if(data.status == 0){
+              return;
+            }else if(data.status == 1){
+              if(data.action == 1){
+                $("#"+borrow_lend_id+" td h4 span").attr("class","label label-primary status");
+                $("#"+borrow_lend_id+" td h4 span").text("借出");
+                $("#"+borrow_lend_id+" td:eq(3)").text(data.update_time);
+              }else if(data.action == 2){
+                $("#"+borrow_lend_id+" td h4 span").attr("class","label label-success status");
+                $("#"+borrow_lend_id+" td h4 span").text("归还");
+                $("#"+borrow_lend_id+" td:eq(4)").text(data.update_time);
+              }else if(data.action == 4){
+                $("#"+borrow_lend_id+" td h4 span").attr("class","label label-danger status");
+                $("#"+borrow_lend_id+" td h4 span").text("拒绝");
+              }
 
-            $("#"+borrow_lend_id+" td[class='control']").empty();
-            if(data.action == 1){
-              var button_dom = $("<button type='button' class='btn btn-danger' data-id='"+borrow_lend_id+"' data-content='2' onclick='change_status(this)'>归还</button>")
-              $("#"+borrow_lend_id+" td[class='control']").append(button_dom);
+              $("#"+borrow_lend_id+" td[class='control']").empty();
+              if(data.action == 1){
+                var button_dom = $("<button type='button' class='btn btn-danger' data-id='"+borrow_lend_id+"' data-content='2' onclick='change_status(this)'>归还</button>")
+                $("#"+borrow_lend_id+" td[class='control']").append(button_dom);
+              }
             }
           }
-        }
+        })
+      }
+      $(function(){
+        var keyword_list = $("meta[name='keyword_list']").attr('content');
+        var hl = new Highlighter();
+        hl.highlight(document.getElementById("table"), keyword_list);
       })
-    }
-    $(function(){
-      var keyword_list = $("meta[name='keyword_list']").attr('content');
-      var hl = new Highlighter();
-      hl.highlight(document.getElementById("table"), keyword_list);
-    })
-</script>
+  </script>
 </html>

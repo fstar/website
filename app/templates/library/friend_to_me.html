@@ -52,6 +52,11 @@
             </ul>
           </li>
           <li><a href="/Library/books">书目</a></li>
+          {% if session["role_id"] == 1%}
+            <li>
+              <a href="/Library/admin">后台管理</a>
+            </li>
+          {% endif %}
         </ul>
 
         <ul class="nav navbar-nav navbar-right">

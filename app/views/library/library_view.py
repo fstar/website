@@ -29,16 +29,6 @@ def library_decorator(func):
             return func(*args, **kwargs)
     return _func
 
-def library_admin_decorator(func):
-    @wraps(func)
-    def _func(*args, **kwargs):
-        role_id = session["role_id"]
-        if role_id == 1:
-            return func(*args, **kwargs)
-        else:
-            return render_template("404.html"), 403
-    return _func
-
 
 @library_view.route("/Library")
 @session_check("/Library")
@@ -492,22 +482,3 @@ def get_book_classify(filter_string=()):  # 获取图书分类表
         else:
             data[first_level] = {second_level:status}
     return data
-
-@library_view.route("/Library/rec_code", methods=["POST"])
-@session_check("/Library")
-def rec_code():
-    try:
-        data = request.files.getlist('ISBN_pic')
-        image_data = data[0].stream
-        temp = Image.open(image_data)
-        print (data[0].filename)
-        temp.save("/Users/fuxin/Desktop/pic/"+data[0].filename)
-        image_data = np.array(Image.open(image_data))
-        image_data = cal(image_data)
-        bar_code   = rec_bar(image_data)
-        if bar_code:
-            return succeed_resp(bar_code=bar_code.decode("utf-8"), status=1)
-        else:
-            return succeed_resp(bar_code='', status=0)
-    except:
-        return failed_resp(message="error",status_code=500)
