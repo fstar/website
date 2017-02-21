@@ -1,0 +1,46 @@
+<!-- <!DOCTYPE html> -->
+<html lang="zh-cn">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name='csrf-token' content="{{ csrf_token() }}">
+    
+    <title>小神领域</title>
+
+    <!-- Bootstrap -->
+    <!-- <link href="https://lib.sinaapp.com/js/bootstrap/latest/css/bootstrap.min.css" rel="stylesheet"> -->
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/history/bootstrap-table.min.css">
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://cdn.bootcss.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <!-- <script src="https://lib.sinaapp.com/js/jquery/3.1.0/jquery-3.1.0.min.js"></script> -->
+    <script src="https://cdn.bootcss.com/jquery/1.11.1/jquery.min.js"></script>
+
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <!-- <script src="https://lib.sinaapp.com/js/bootstrap/latest/js/bootstrap.min.js"></script> -->
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+    <script src="/static/js/history/bootstrap-table.min.js"></script>
+    <script src="/static/js/history/bootstrap-table-zh-CN.min.js"></script>
+    <script src="/static/js/history/index.js"></script>
+    <link href="{{url_for('static', filename='css/login.css')}}" rel="stylesheet">
+    <style type="text/css">
+      body{
+      	text-align: center;
+      	background: #f7fafc;
+      	overflow: hidden;
+      	}
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid" style="position: absolute; width: 100%; top:25%">
+      <table id="table"></table>
+    </div>
+    <canvas id="Mycanvas"></canvas>
+    <script src="{{url_for('static', filename='js/background.js')}}"></script>
+  </body>
+</html>

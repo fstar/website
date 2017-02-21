@@ -9,6 +9,7 @@ from flask_cors import CORS
 from flask_pymongo import PyMongo
 from random import randint
 from app.views.common.utils import *
+from app.views.common.init_db import *
 
 
 
@@ -25,6 +26,7 @@ def create_app(database, config="app.config.ConfigObject"):
     database.init_app(app)
     database.create_all(app=app)
     mongo_client.init_app(app=app)
+
 
     app.logger_name = "spider_api"
     app.logger.handlers = create_logger_handler("spider_api", is_stream_handler=True)
@@ -49,6 +51,7 @@ def initialize_app(application, config, profile=False):
     from app.views.library.library_view import library_view
     from app.views.library.library_admin_view import library_admin_view
     from app.views.book_spider_api.book_spider_api import book_spider_api_view
+    from app.views.world_history.world_history_view import world_history_view
 
     application.register_blueprint(login_view)
     application.register_blueprint(index_view)
@@ -56,6 +59,8 @@ def initialize_app(application, config, profile=False):
     application.register_blueprint(library_view)
     application.register_blueprint(library_admin_view)
     application.register_blueprint(book_spider_api_view)
+    application.register_blueprint(world_history_view)
+
 
 
     csrf = CsrfProtect()
@@ -64,10 +69,16 @@ def initialize_app(application, config, profile=False):
     csrf.exempt(login_view)
     csrf.exempt(admin_view)
     csrf.exempt(book_spider_api_view)
+    csrf.exempt(world_history_view)
+
 
 
 
 def add_request_handler(application, database):
+    @application.before_first_request
+    def before_first_request():
+        create_UN_Country() 
+
     @application.before_request
     def before_request():
         request.start_time = time.time()

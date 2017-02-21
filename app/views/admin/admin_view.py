@@ -513,9 +513,8 @@ def admin_role():
 def admin_get_role_module():
     query = Role.query.outerjoin(Role_Module).outerjoin(Module).\
             with_entities(Role.id.label("Role_id"), Role.name.label("Role_name"),\
-                          Module.id.label("Module_id"), Module.name.label("Module_name")).all()
-
-
+                          Module.id.label("Module_id"), Module.name.label("Module_name")).\
+            filter(Role_Module.status==1).all()
 
     nodes = {}
     color_list = ["#CA0B66", "#1685C2", "#00C740", "#A219C0", "#C88230",
@@ -524,7 +523,6 @@ def admin_get_role_module():
     edges = []
     index = 0
     for i in query:
-
         role_id = id_string.format(table="Role", id=i.Role_id)
         if i.Role_id and role_id not in nodes:
             nodes[role_id] = {
@@ -551,10 +549,11 @@ def admin_get_role_module():
                 }
             }
             index += 1
-        edges.append({
-            "source":role_id,
-            "target":module_id,
-            "value":random.randint(100,300)
-        })
+        if i.Role_id and i.Module_id:
+            edges.append({
+                "source":role_id,
+                "target":module_id,
+                "value":random.randint(100,300)
+            })
     nodes = list(nodes.values())
     return succeed_resp(nodes=nodes, edges=edges)

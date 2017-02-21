@@ -199,3 +199,115 @@ class Book_Spider(db.Model):
             self.desc = desc
         if img_url:
             self.img_url = img_url
+
+class History_action(db.Model):
+    '''
+        历史事件表
+    '''
+    __tablename__ = 'history_action'
+
+    id       = db.Column("id", INTEGER(), primary_key=True, nullable=False, autoincrement=True)     # id
+    year     = db.Column('year',VARCHAR(255),nullable=False,default='')                    # 事件发生时间
+    area     = db.Column('area',VARCHAR(255),nullable=False,default='')                    # 地点
+    country  = db.Column('country',VARCHAR(255),default='')                     # 国家
+    county   = db.Column('county',VARCHAR(255),default='')                      # 洲
+    action   = db.Column('action',TEXT(),default='')                            # 事件内容
+    person   = db.Column('person',VARCHAR(255),default='')                      # 事件人物
+    year_num = db.Column('year_num',INTEGER(),default=0)                        # 事件年份统一化
+    user_id  = db.Column('user_id',INTEGER(),db.ForeignKey("User.uid"))         # 写入事件的用户
+
+    def __init__(self, year, area, country, county, action, person, user_id):
+        self.year     = year
+        self.area     = area
+        self.country  = country
+        self.county   = county
+        self.action   = action
+        self.person   = person
+        self.user_id  = user_id
+        self.year_num = history_action.year_to_year_num(year)
+
+    @classmethod
+    def year_to_year_num(cls, year):
+        sign      = 1
+        year_num  = "%04d"
+        month_num = "%02d"
+        day_num   = "%02d"
+
+        if year.startswith("公元前"):
+            sign = -1
+        elif year.startswith("公元后"):
+            sign = 1
+
+
+        date = year.split(":")[-1]
+        year_index = date.find("年")
+        year_num = year_num%(int(date[:year_index]))
+
+        month_index = date.find("月")
+        if month_index != -1:
+            month_num = month_num % (int(date[year_index+1:month_index]))
+        else:
+            month_num = month_num % (0)
+
+        day_index = date.find("日")
+        if day_index != -1:
+            day_num = day_num%(int(date[month_index+1:day_index]))
+        else:
+            day_num = day_num%(0)
+
+        return sign * int(year_num+month_num+day_num)
+
+class Action_relationship(db.Model):
+    __tablename__ = 'action_relationship'
+
+    id            = db.Column("id", INTEGER(), primary_key=True, nullable=False, autoincrement=True) # id
+    first_action  = db.Column("first_action", INTEGER(), db.ForeignKey("history_action.id"), nullable=False)  # 事件1
+    second_action = db.Column("second_action", INTEGER(), db.ForeignKey("history_action.id"), nullable=False) # 事件2
+    reason        = db.Column("reason", TEXT(),nullable=False, default="")
+    user_id       = db.Column('user_id',INTEGER(),db.ForeignKey("User.uid"))    # 写入事件的用户
+
+    def __init__(self, first_action, second_action, reason, user_id):
+        self.first_action = first_action
+        self.second_action = second_action
+        self.reason
+        self.user_id
+
+class UN_Country(db.Model):
+    __tablename__ = "UN_Country"
+    id            = db.Column("id", INTEGER(), primary_key=True, nullable=False, autoincrement=True)     # id
+    continent     = db.Column('continent', VARCHAR(255),nullable=False, default='')
+    capital       = db.Column('capital', VARCHAR(255),nullable=False, default='')
+    languages     = db.Column('languages', VARCHAR(255),nullable=False, default='')
+    geonameId     = db.Column('geonameId', INTEGER(),nullable=False)
+    south         = db.Column('south', INTEGER(),nullable=False)
+    isoAlpha3     = db.Column('isoAlpha3', VARCHAR(255),nullable=False, default='')
+    north         = db.Column('north', INTEGER(),nullable=False)
+    fipsCode      = db.Column('fipsCode', VARCHAR(255),nullable=False, default='')
+    population    = db.Column('population', VARCHAR(255),nullable=False, default='')
+    east          = db.Column('east', INTEGER(),nullable=False)
+    isoNumeric    = db.Column('isoNumeric', VARCHAR(255),nullable=False, default='')
+    areaInSqKm    = db.Column('areaInSqKm', VARCHAR(255),nullable=False, default='')
+    countryCode   = db.Column('countryCode', VARCHAR(255),nullable=False, default='')
+    west          = db.Column('west', INTEGER(),nullable=False)
+    countryName   = db.Column('countryName', VARCHAR(255),nullable=False, default='')
+    continentName = db.Column('continentName', VARCHAR(255),nullable=False, default='')
+    currencyCode  = db.Column('currencyCode', VARCHAR(255),nullable=False, default='')
+
+    def __init__(self,data):
+        self.continent = data["continent"]
+        self.capital = data["capital"]
+        self.languages = data["languages"]
+        self.geonameId = data["geonameId"]
+        self.south = data["south"]
+        self.isoAlpha3 = data["isoAlpha3"]
+        self.north = data["north"]
+        self.fipsCode = data["fipsCode"]
+        self.population = data["population"]
+        self.east = data["east"]
+        self.isoNumeric = data["isoNumeric"]
+        self.areaInSqKm = data["areaInSqKm"]
+        self.countryCode = data["countryCode"]
+        self.west = data["west"]
+        self.countryName = data["countryName"]
+        self.continentName = data["continentName"]
+        self.currencyCode = data["currencyCode"]

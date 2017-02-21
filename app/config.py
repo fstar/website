@@ -23,6 +23,8 @@ mongo_port     = cf.get("DEFAULT", "mongo_port")
 MONGO_USERNAME = cf.get("DEFAULT", "mongo_username")
 MONGO_PASSWORD = cf.get("DEFAULT", "mongo_password")
 
+UN_user        = cf.get("DEFAULT","UN_user")
+
 LOGIN_EXPIRE_TIME_SECONDS = 3600 * 2
 
 class ConfigObject():
