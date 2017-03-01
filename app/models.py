@@ -6,6 +6,11 @@ import datetime
 db = SQLAlchemy()
 
 class User(db.Model):
+    MALE = 0
+    FEMALE = 1
+    OTHER = 2
+
+
     __tablename__   = "User"
     uid             = db.Column('uid', INTEGER(), primary_key=True, nullable=False, autoincrement=True)  # 用户ID
     name            = db.Column("name", VARCHAR(255), nullable=False)                                    # 用户名
@@ -16,13 +21,13 @@ class User(db.Model):
     create_time     = db.Column("create_time", DATETIME(), default=datetime.datetime.now)                # 创建时间
     last_login_time = db.Column("last_login_time", DATETIME())                                           # 最后登录时间
     last_IP         = db.Column("last_IP", VARCHAR(length=16))                                           # 最后登录IP
-
-    def __init__(self, name, password, role_id):
+    sex             = db.Column("sex", INTEGER(), default=2)
+    def __init__(self, name, password, role_id, sex):
         self.name        = name
         self.token       = md5(self.name.encode("utf-8")).hexdigest()
         self.password    = password
         self.role_id     = role_id
-
+        self.sex         = sex
 
 class Role(db.Model):
     __tablename__ = "Role"
@@ -62,6 +67,41 @@ class Role_Module(db.Model):
         self.module_id = module_id
         self.control = control
         self.status = status
+
+class Group(db.Model):
+    __tablename__ = "Group"
+
+    RUN = 1
+    STOP = 0
+    ERROR = -1
+
+    id     = db.Column("id", INTEGER(), primary_key=True, nullable=False, autoincrement=True)            # 分组id
+    name   = db.Column("name", VARCHAR(255),nullable=False, default='')                                  # 分组名
+    status = db.Column('status', INTEGER(), nullable=False, default=1)                             # 分组状态
+
+    def __init__(self, name):
+        self.name = name
+
+class User_Group(db.Model):
+    __tablename__ = 'User_Group'
+
+    RUN = 1
+    STOP = 0
+    ERROR = -1
+
+    id       = db.Column("id", INTEGER(), primary_key=True, nullable=False, autoincrement=True)          # 分组id
+    User_id  = db.Column("User_id", INTEGER(), db.ForeignKey("User.uid"), nullable=False)                # 用户id
+    Group_id = db.Column("Group_id", INTEGER(), db.ForeignKey("Group.id"), nullable=False)               # 分组id
+    status   = db.Column('status', INTEGER(), nullable=False, default=1)                           # 分组状态
+
+    def __init__(self, User_id, Group_id, status=1):
+        self.User_id  = User_id
+        self.Group_id = Group_id
+        self.status   = status
+
+
+
+
 
 class Library_User(db.Model):
     __tablename__ = 'Library_User'

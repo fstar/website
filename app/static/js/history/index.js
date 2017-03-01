@@ -26,15 +26,16 @@ String.prototype.format = function(args) {
     return result;
 }
 
-var Data;
+var Data=[];
 var page=1;
 var one_page=1000;
 var total_page=1;
 var csrftoken=$('meta[name=csrf-token]').attr('content');
+function time2stamp(){var d=new Date();return Date.parse(d)+d.getMilliseconds();}
 
 function get_data(){
    $.ajax({
-     url:"/History/get_data/{page}/{one_page}".format({page:page, one_page:one_page}),
+     url:"/History/get_data",
      type:"GET",
      data:{csrftoken:csrftoken},
      beforeSend:function(XMLHttpRequest){
@@ -45,6 +46,32 @@ function get_data(){
      },
      success:function(data){
        console.log(data);
+       Data=[];
+       for(var i=1;i<50000;i++){
+           console.log(i);
+           Data.push({
+             id: i,
+             name: 'Item '+i,
+             price: '$'+i
+           })
+       }
+
+       $('#table').bootstrapTable({
+              columns: [{
+                  field: 'id',
+                  title: 'Item ID'
+              }, {
+                  field: 'name',
+                  title: 'Item Name'
+              }, {
+                  field: 'price',
+                  title: 'Item Price'
+              }],
+              data: Data
+        });
      }
    });
 }
+$(function() {
+   get_data();
+})

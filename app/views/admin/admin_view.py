@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, request
 from flask_restful import Resource, Api
 from app.views.common.view_decorators import *
-from app.models import db, Module, Role_Module, User, Role
+from app.models import db, Module, Role_Module, User, Role, Group, User_Group
 from app.views.common.utils import *
 import json
 import random
@@ -73,7 +73,8 @@ class admin_api_user(Resource):
                               User.token.label("token"),\
                               User.role_id.label("role_id"),\
                               Role.name.label("role_name"),\
-                              User.status.label("status")).paginate(page=int(page), per_page=one_page, error_out=False)
+                              User.status.label("status"),\
+                              User.sex.label("sex")).paginate(page=int(page), per_page=one_page, error_out=False)
         data = [{
                     "id":i.uid,
                     "name":i.name,
@@ -81,14 +82,12 @@ class admin_api_user(Resource):
                     "token":i.token,
                     "role_name":i.role_name,
                     "role_id":i.role_id,
-                    "status":i.status
+                    "status":i.status,
+                    "sex":i.sex
                 }for i in query.items]
         current_page = page
         total_page = query.pages
-        has_next = query.has_next
-        has_prev = query.has_prev
-        return succeed_resp(data=data, current_page=current_page, total_page=total_page,\
-                                has_prev=has_prev, has_next=has_next)
+        return succeed_resp(data=data, current_page=current_page, total_page=total_page)
 
     '''
         POST:   创建新数据
@@ -97,7 +96,9 @@ class admin_api_user(Resource):
             {
                 name:           # 新增的用户名
                 password:       # 密码
+                sex:            # 性别
                 role_id:        # 角色id
+                group_list:     # 分组列表
             }
         response:
             {
@@ -110,18 +111,30 @@ class admin_api_user(Resource):
         username = request.form.get("username")
         password = request.form.get("password", "").strip()
         role_id = request.form.get("role_id")
+        group_list = json.loads(request.form.get("group_list"))
+        sex = request.form.get("sex")
 
         query = User.query.filter_by(name=username).first()
         if not password:
             return succeed_resp(code=422, name="password", info=u"密码不能为空")
         if query:
             return succeed_resp(code=422, name="username", info=u'用户名已存在')
+
+        group_query = Group.query.filter(Group.id.in_(group_list.keys())).count()
+
+        if len(group_list.keys()) != group_query:
+            return failed_resp(message=u"group_list 的数据有异常")
         else:
-            one = User(name=username, password=password, role_id=role_id)
+            one = User(name=username, password=password, role_id=role_id, sex=sex)
             db.session.add(one)
             db.session.flush()
             uid = one.uid
             db.session.commit()
+            for group_id, status in group_list.items():
+                one = User_Group(User_id=uid, Group_id=group_id, status=status)
+                db.session.add(one)
+            db.session.commit()
+
             return succeed_resp(code=201, info=u'新增成功')
 
     '''
@@ -131,6 +144,7 @@ class admin_api_user(Resource):
             {
                 password:       # 修改密码
                 role_id:        # 修改角色id
+                group_list:     # 分组列表
             }
         response:
             {
@@ -143,6 +157,10 @@ class admin_api_user(Resource):
         # uid = request.form.get("uid")
         password = request.form.get("password","")
         role_id = request.form.get("role_id","")
+        sex = request.form.get("sex")
+        group_list = json.loads(request.form.get("group_list"))
+
+
 
         query = User.query.filter_by(uid=uid).first()
         if not query:
@@ -152,7 +170,25 @@ class admin_api_user(Resource):
                 query.password = password
             if role_id:
                 query.role_id = role_id
+            if sex:
+                query.sex = sex
             db.session.commit()
+
+
+            group_query = Group.query.filter(Group.id.in_(group_list.keys())).count()
+
+            if len(group_list.keys()) != group_query:
+                return failed_resp(message=u"group_list 的数据有异常")
+            else:
+                for group_id, status in group_list.items():
+                    query = User_Group.query.filter_by(User_id=uid, Group_id=group_id).first()
+                    if query:
+                        query.status = status
+                    else:
+                        one = User_Group(User_id=uid, Group_id=group_id, status=status)
+                        db.session.add(one)
+                db.session.commit()
+
             return succeed_resp(code=201, info=u'修改成功')
 
     '''
@@ -375,7 +411,7 @@ class admin_api_module(Resource):
             {
                 code: 204 删除成功 or 422 用户不存在
                 info: 状态原因
-                module_status: 用户当前状态
+                module_status: 模块当前状态
             }
     '''
     def delete(self, module_id):
@@ -453,9 +489,175 @@ class admin_api_role_module(Resource):
             db.session.commit()
         return succeed_resp(code=201, info=u'修改成功')
 
+class admin_api_group_list(Resource):
+    method_decorators = [session_check("/admin")]
+    '''
+        GET: 获取分组列表
+        url: /admin/api/group_list
+        request:
+            {
+                group_id:      # 分组id
+            }
+        response:
+            {
+                code: 200
+                data:[{
+                    id:
+                    name:
+                    status:
+                }]
+            }
+    '''
+    def get(self):
+        group_query = Group.query.all()
+        data = [{
+            "id":i.id,
+            "name":i.name,
+            "status":i.status
+        } for i in group_query]
+        return succeed_resp(data=data)
+
+    '''
+        POST: 新增分组
+        url: /admin/api/group_list
+        request:
+            {
+                name:
+            }
+        response:
+            {
+                code: 201 添加成功 or 422 验证失败(可能是用户名重复)
+                info: 状态原因
+                name: 出错的字段
+            }
+    '''
+    def post(self):
+        name = request.form.get("name")
+        if not name:
+            return failed_resp(message="请填写分组名!")
+        one = Group(name)
+        db.session.add(one)
+        db.session.flush()
+        group_id = one.id
+        db.session.commit()
+        return succeed_resp(group_id=group_id, code=201, info=u'新增成功')
+    '''
+        PATCH: 修改分组
+        url: /admin/api/group_list/<int:group_id>
+        request:
+            {
+                name:
+            }
+        response:
+            {
+                code: 201 添加成功 or 422 验证失败(可能是用户名重复)
+                info: 状态原因
+                name: 出错的字段
+            }
+    '''
+    def patch(self, group_id):
+        name = request.form.get("name","")
+
+        query = Group.query.filter_by(id=group_id).first()
+        if not query:
+            return succeed_resp(code=422, name="group_id", info=u'分组不存在')
+        else:
+            if name:
+                query.name = name
+            db.session.commit()
+            return succeed_resp(code=201, info=u'修改成功')
+
+    '''
+        DELETE:  删除数据 / 恢复数据
+        url:  /admin/api/group_list/<int:group_id>
+        response:
+            {
+                code: 204 删除成功 or 422 用户不存在
+                info: 状态原因
+                group_status:  分组当前状态
+            }
+    '''
+    def delete(self, group_id):
+        query = Group.query.filter_by(id=int(group_id)).first()
+        if query:
+            status = 1 - int(query.status)
+            query.status = status
+            db.session.commit()
+            return succeed_resp(status=1, group_status=status, info=u"success")
+        else:
+            return failed_resp(info=u"分组不存在", code=422)
+
+class admin_api_user_group(Resource):
+    method_decorators = [session_check("/admin")]
+
+    '''
+        GET:  用于获取数据
+        url:  /admin/api/user_group
+        request:
+            {
+                user_id:        # 角色id
+            }
+        response:
+            {
+                data:[{
+                    group_id:  # 模块id
+                }],
+                code:200
+            }
+    '''
+    def get(self):
+        user_id = request.args.get("user_id",-1)
+        query = User_Group.query.filter_by(User_id=user_id, status=1).all()
+        data = [i.Group_id for i in query]
+        return succeed_resp(code=200, data=data)
+
+    '''
+        POST:   创建或修改新的角色模块关系
+        url:  /admin/api/user_group
+        request:
+            {
+                user_id:            # 角色id
+                group_list:         #  分组列表
+                        {
+                            group1 : status,
+                            group2 : status,
+                            group3 : status,
+                        }
+            }
+        response:
+            {
+                code: 201 添加成功 or 422 验证失败(可能是用户名重复)
+                info: 状态原因
+                name: 出错的字段
+            }
+    '''
+    def post(self):
+        user_id = request.form.get("user_id")
+        group_list = json.loads(request.form.get("group_list"))
+
+        user_query = User.query.filter_by(uid=user_id).first()
+        if not user_query:
+            return failed_resp(message=u"user_id 不存在")
+
+        group_query = Group.query.filter(Group.id.in_(group_list.keys())).count()
+        if len(group_list.keys()) != group_query:
+            return failed_resp(message=u"group_list 的数据有异常")
+
+        for group_id, status in group_list.items():
+            query = User_Group.query.filter_by(User_id=user_id, Group_id=group_id).first()
+            if query:
+                query.status = status
+            else:
+                one = User_Group(User_id=user_id, Group_id=group_id, status=status)
+                db.session.add(one)
+            db.session.commit()
+        return succeed_resp(code=201, info=u'修改成功')
+
 admin_view_api.add_resource(admin_api_user, "/admin/api/user", "/admin/api/user/<int:uid>")
 admin_view_api.add_resource(admin_api_role, "/admin/api/role", "/admin/api/role/<int:role_id>")
 admin_view_api.add_resource(admin_api_module, "/admin/api/module", "/admin/api/module/<int:module_id>")
+admin_view_api.add_resource(admin_api_group_list, "/admin/api/group_list", "/admin/api/group_list/<int:group_id>")
+admin_view_api.add_resource(admin_api_user_group, "/admin/api/user_group")
 admin_view_api.add_resource(admin_api_role_module, "/admin/api/role_module")
 
 @admin_view.route("/admin")
@@ -553,6 +755,55 @@ def admin_get_role_module():
             edges.append({
                 "source":role_id,
                 "target":module_id,
+                "value":random.randint(100,300)
+            })
+    nodes = list(nodes.values())
+    return succeed_resp(nodes=nodes, edges=edges)
+
+@admin_view.route("/admin/api/get_user_group", methods=["GET"])
+@session_check("/admin")
+def admin_get_user_group():
+    query = Group.query.outerjoin(User_Group).outerjoin(User).\
+            with_entities(Group.id.label("Group_id"), Group.name.label("Group_name"),\
+                          User.uid.label("User_id"), User.name.label("User_name"), User.sex.label("sex")).\
+            filter(User_Group.status==1).all()
+    nodes = {}
+    group_color = "#666666"
+    user_color = ['#009de9','#e0077b','#7753c6'] # 男 女 其他
+    id_string = "{table}_{id}"
+    edges = []
+    index = 0
+    for i in query:
+        Group_id = id_string.format(table="Group", id=i.Group_id)
+        if i.Group_id and Group_id not in nodes:
+            nodes[Group_id] = {
+                "id":Group_id,
+                "name":i.Group_name,
+                "symbolSize":40,
+                "itemStyle":{
+                    "normal":{
+                        "color": group_color
+                    }
+                }
+            }
+            index += 1
+        User_id = id_string.format(table="User", id=i.User_id)
+        if i.User_id and User_id not in nodes:
+            nodes[User_id] = {
+                "id":User_id,
+                "name":i.User_name,
+                "symbolSize":20,
+                "itemStyle":{
+                    "normal":{
+                        "color": user_color[i.sex]
+                    }
+                }
+            }
+            index += 1
+        if i.Group_id and i.User_id:
+            edges.append({
+                "source":Group_id,
+                "target":User_id,
                 "value":random.randint(100,300)
             })
     nodes = list(nodes.values())

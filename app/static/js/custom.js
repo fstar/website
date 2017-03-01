@@ -64,7 +64,6 @@ $(document).ready(function(){
 /* Widget close */
 
 $('.wclose').click(function(e){
-  console.log('bbbbbbbbb');
   e.preventDefault();
   var $wbox = $(this).parent().parent().parent();
   $wbox.css(100);

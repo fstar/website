@@ -55,11 +55,7 @@
                   </tbody>
                 </table>
               </div>
-                <div class="widget-foot">
-                    <ul class="pagination pull-right" id="user_pagination">
-                    </ul>
-
-                  <div class="clearfix"></div>
+                <div class="widget-foot" id="user_pagination" style="margin-bottom:0px">
 
                 </div>
 
@@ -163,6 +159,19 @@
                 </div>
             </div>
           </div>
+
+          <div class="row">
+            <div class="col-md-12">
+                <div class="widget">
+                <div class="widget-head">
+                  <div class="pull-left">用户分组关系图</div>
+                  <div class="clearfix"></div>
+                </div>
+                  <div id="user_group" style="width: 100%;height:400px;"></div>
+                </div>
+            </div>
+          </div>
+
         </div>
 		  </div>
     </div>
@@ -170,7 +179,11 @@
 
 <div id="show_detail" style="display:none;position:fixed;z-index:9999999;">
 </div>
-<script src="https://7xpjdf.com1.z0.glb.clouddn.com/echarts.min.js"></script>
+<!-- <script src="https://7xpjdf.com1.z0.glb.clouddn.com/echarts.min.js"></script> -->
+<script src="https://cdn.bootcss.com/echarts/3.4.0/echarts.min.js"></script>
+<link type="text/css" href="/static/css/bs_pagination.min.css" rel="stylesheet" />
+<script src="/static/js/bs_pagination.min.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript" src="/static/js/localization/en.min.js"></script>
 <script src="{{url_for('static', filename='js/admin/index.js')}}"></script>
 
 {% endblock head %}
