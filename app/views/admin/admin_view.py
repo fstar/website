@@ -108,7 +108,7 @@ class admin_api_user(Resource):
             }
     '''
     def post(self):
-        username = request.form.get("username")
+        username = request.form.get("name")
         password = request.form.get("password", "").strip()
         role_id = request.form.get("role_id")
         group_list = json.loads(request.form.get("group_list"))

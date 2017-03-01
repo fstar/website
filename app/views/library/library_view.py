@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 from flask import Blueprint, render_template, request, redirect, session, url_for
 from app.views.common.view_decorators import *
-from app.models import db, Library_User, Library_Book, Borrow_Lend, Library_Classify, Library_message
+from app.models import db, Library_User, Library_Book, Borrow_Lend, Library_Classify, Library_message, Group, User_Group
 from app.views.common.utils import *
 import json
 import random
@@ -98,7 +98,11 @@ def Library_books(page=1):    # 书目页
     keyword   = request.args.get("keyword", None)
     condition = {}
 
-    book_query = Library_Book.query.outerjoin(Library_User, Library_Book.lender==Library_User.id).filter(Library_Book.status!=-1,Library_Book.lender!=session["library_user_id"])
+    # 分组过滤: 根据当前user_id, 得到分组编号, 通过分组编号得到同一组的用户user_id
+    subqry = User_Group.query.filter_by(status=1, User_id=session["uid"]).with_entities(User_Group.Group_id.label("group_id")).subquery()
+    uid_query = User_Group.query.filter(User_Group.Group_id.in_(subqry), User_Group.User_id != session["uid"], User_Group.status==1).group_by(User_Group.User_id).with_entities(User_Group.User_id.label("user_id")).subquery()
+    library_user_id = Library_User.query.filter(Library_User.user_id.in_(uid_query)).with_entities(Library_User.id.label("library_user_id")).subquery()
+    book_query = Library_Book.query.outerjoin(Library_User, Library_Book.lender==Library_User.id).filter(Library_Book.status!=-1,Library_Book.lender.in_(library_user_id))
     if not keyword: # 精确匹配: 每一个字段都进行匹配, and操作
         if book_name:
             condition["book_name"] = book_name
@@ -146,7 +150,7 @@ def Library_books(page=1):    # 书目页
                                           paginate(page, per_page=50, error_out=False)
     book_id_list = [i.id for i in book_query.items]
     borrow_query = Borrow_Lend.query.filter_by(borrower=session["library_user_id"]).\
-                                     filter(Borrow_Lend.book_id.in_(book_id_list),
+                                     filter(Borrow_Lend.book_id.in_(book_id_list),\
                                             Borrow_Lend.action.in_([3,1])).all()
     borrow_dict = {i.book_id:i.action for i in borrow_query}
     pre_href = "/Library/books/{page}?".format(page=book_query.prev_num)
