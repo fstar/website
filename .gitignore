@@ -8,3 +8,5 @@ config.ini
 .vscode
 *.json
 *.sql
+ssl.cert
+ssl.key
